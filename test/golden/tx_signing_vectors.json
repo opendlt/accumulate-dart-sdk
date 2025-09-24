@@ -1,0 +1,22 @@
+{
+  "description": "Transaction signing test vectors for Accumulate",
+  "vectors": [
+    {
+      "name": "simple_send_tokens",
+      "privateKey": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "publicKey": "expected_to_be_calculated",
+      "header": {
+        "principal": "acc://alice.acme/tokens",
+        "timestamp": 1234567890123
+      },
+      "body": {
+        "type": "send-tokens",
+        "to": [{"url": "acc://bob.acme/tokens", "amount": "1000"}]
+      },
+      "expectedLID": "expected_calculated_lid",
+      "expectedLTA": "expected_calculated_lta",
+      "expectedTxHash": "expected_tx_hash",
+      "expectedSignature": "expected_signature"
+    }
+  ]
+}

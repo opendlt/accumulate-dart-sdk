@@ -1,0 +1,16 @@
+{
+  "type": "transaction",
+  "header": {
+    "principal": "acc://example.acme/alice",
+    "nonce": 12345
+  },
+  "body": {
+    "type": "sendTokens",
+    "to": [
+      {
+        "url": "acc://example.acme/bob",
+        "amount": "1000000"
+      }
+    ]
+  }
+}

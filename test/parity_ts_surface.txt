@@ -1,0 +1,3 @@
+﻿src/api_v2/client.ts:94:export class Client {
+src/api_v2/rpc-client.ts:18:export class RpcClient {
+src/api_v3/client.ts:23:export class JsonRpcClient {

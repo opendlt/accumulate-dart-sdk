@@ -1,0 +1,20 @@
+.dart_tool/
+.packages
+pubspec.lock
+build/
+coverage/
+**/.DS_Store# Generated / tooling
+.dart_tool/
+doc/
+coverage/
+build/
+pubspec.lock
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Windows-reserved artifact that breaks Git indexing
+nul

@@ -1,0 +1,7 @@
+# Dartdoc configuration to exclude problematic generated files
+
+dartdoc:
+  exclude:
+    # Exclude generated client with duplicate method names
+    - lib/accumulate_client.dart
+  categoryOrder: ["Core", "Clients", "Types", "Crypto", "Transport"]

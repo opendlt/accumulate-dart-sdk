@@ -1,0 +1,9 @@
+        {
+          "type": "ed25519",
+          "publicKey": "dff03fddf03d29a1f45daf8e9f2bd7c68ee3f2989b0c6c3385946d20f04b4926",
+          "signature": "18a0961556e5d33a6e96373375e3c568300dc6596db964b4c00ced67323549225fdebd4b2e52cd9b1b8eccb6f5913d2cbd8856473a145494e5cb70f3da59b901",
+          "signer": "acc://0test1test01.acme/book/1",
+          "transactionHash": "cd1fbad70af1a90bfb4ec9824f84c4820a01dd5b26eb0ddeacbbfa709dc7ab27",
+          "signerVersion": 51,
+          "timestamp": 1757675018582000
+        }

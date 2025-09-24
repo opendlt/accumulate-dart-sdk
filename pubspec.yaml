@@ -1,0 +1,33 @@
+name: opendlt_accumulate
+description: Dart/Flutter SDK for Accumulate JSON-RPC (V2+V3), with verified bit-for-bit encoding & signing
+version: 1.0.0
+homepage: https://accumulatenetwork.io
+repository: https://github.com/opendlt/opendlt-dart-v2v3-sdk
+issue_tracker: https://github.com/opendlt/opendlt-dart-v2v3-sdk/issues
+publish_to: none
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  http: ^1.0.0
+  meta: ^1.8.0
+  crypto: ^3.0.3
+  cryptography: ^2.6.0
+  collection: ^1.18.0
+  path: ^1.9.0
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^2.0.0
+  yaml: ^3.1.2
+  coverage: ^1.7.2
+
+topics:
+  - blockchain
+  - rpc
+  - json-rpc
+  - accumulate
+  - sdk
+
+# Note: Generated client temporarily excluded from docs due to duplicate methods
