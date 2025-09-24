@@ -1,16 +1,17 @@
+# Dart / Flutter build + tooling
 .dart_tool/
 .packages
 pubspec.lock
 build/
 coverage/
-**/.DS_Store# Generated / tooling
-.dart_tool/
-doc/
-coverage/
-build/
-pubspec.lock
 
-# OS/editor junk
+# Generated docs
+doc/
+
+# Claude local settings
+.claude/
+
+# OS / editor junk
 .DS_Store
 Thumbs.db
 .vscode/
