@@ -10,9 +10,9 @@ void main() {
   group("Transaction builder signing tests", () {
     test("transaction hash generation is stable", () async {
       final ctx =
-          BuildContext(principal: "acc://example-adi", timestamp: 1234567890);
+          BuildContext(principal: "acc://exampleAdi.acme", timestamp: 1234567890);
       final body = TxBody.createIdentity(
-          url: "acc://example-adi",
+          url: "acc://exampleADI.acme",
           keyBookName: "book",
           publicKeyHash: "00".padLeft(64, "0"));
 
