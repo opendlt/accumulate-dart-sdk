@@ -5,7 +5,7 @@ Write-Host "Generating API documentation..."
 dart doc
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ Documentation generated successfully!"
+    Write-Host "Documentation generated successfully!"
     Write-Host "View at: .dart_tool/doc/api/index.html"
 } else {
     throw "Documentation generation failed"

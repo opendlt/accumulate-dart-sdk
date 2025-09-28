@@ -20,9 +20,7 @@ Post-Release:
 □ 10. Update README.md with new installation instructions
 □ 11. Create GitHub release with changelog notes
 
-🚀 SDK Features to Highlight:
-- Bit-for-bit compatible signing with Go/TypeScript
-- Ed25519 crypto with LID/LTA derivation
+ SDK Features to Highlight:
 - Transaction builders for all v3 operations
 - Unified v2+v3 JSON-RPC client
 - Comprehensive test coverage with golden files
