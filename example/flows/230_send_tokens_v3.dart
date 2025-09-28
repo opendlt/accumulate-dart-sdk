@@ -9,7 +9,7 @@ import "package:opendlt_accumulate/src/util/time.dart";
 Future<void> main() async {
   print("=== Send Tokens v3 Transaction ===");
 
-  final cfg = FlowConfig.fromEnv();
+  final cfg = await FlowConfig.fromDevNetDiscovery();
   final acc = cfg.make();
 
   // Generate key pair (in real use, load from secure storage)

@@ -1,12 +1,11 @@
 import "dart:convert";
 import "dart:io";
 import "config.dart";
-import "package:opendlt_accumulate/opendlt_accumulate.dart";
 
 Future<void> main() async {
   print("=== Accumulate Testnet Faucet ===");
 
-  final cfg = FlowConfig.fromEnv();
+  final cfg = await FlowConfig.fromDevNetDiscovery();
   if (!cfg.v2.contains("testnet")) {
     stderr.writeln("ERROR: Faucet only works on testnet");
     stderr.writeln("Set ACC_NET=testnet (or leave unset for default)");

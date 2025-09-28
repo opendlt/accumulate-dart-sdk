@@ -9,7 +9,7 @@ import "package:opendlt_accumulate/src/util/time.dart";
 Future<void> main() async {
   print("=== Create Identity (ADI) v3 Transaction ===");
 
-  final cfg = FlowConfig.fromEnv();
+  final cfg = await FlowConfig.fromDevNetDiscovery();
   final acc = cfg.make();
 
   // Generate key pair for signing
