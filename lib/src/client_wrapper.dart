@@ -1,8 +1,6 @@
 // Client wrapper that works around generated client issues
 
-import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../types.dart';
 import 'json_rpc_client.dart';
 
 /// Simplified client wrapper that works around generated client compilation issues

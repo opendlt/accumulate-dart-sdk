@@ -63,14 +63,12 @@ class JsonRpcClient {
 
   /// Make a batch JSON-RPC call
   Future<List<dynamic>> batch(List<JsonRpcRequest> requests) async {
-    final batchRequest = requests
-        .map((req) => {
-              'jsonrpc': '2.0',
-              'method': req.method,
-              'id': req.id,
-              if (req.params != null) 'params': req.params,
-            })
-        .toList();
+    final batchRequest = requests.map((req) => {
+      'jsonrpc': '2.0',
+      'method': req.method,
+      'id': req.id,
+      if (req.params != null) 'params': req.params,
+    }).toList();
 
     final response = await _httpClient.post(
       Uri.parse(_serverUrl),
