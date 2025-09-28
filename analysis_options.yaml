@@ -5,3 +5,4 @@ analyzer:
     - lib/types.dart
     - lib/accumulate_client.dart
     - lib/src/json_rpc_client.dart
+    - lib/src/generated/**
