@@ -106,9 +106,9 @@ Environment variables:
 
 ## Key Features Demonstrated
 
-✅ **Ed25519 Cryptography**: Pure Dart implementation with bit-for-bit compatibility
-✅ **LID/LTA Derivation**: Exact key-to-URL mapping matching Go/TypeScript
-✅ **Transaction Building**: Type-safe builders for all v3 operations
-✅ **Envelope Signing**: Verified signing preimage construction
-✅ **Network Integration**: Unified v2+v3 JSON-RPC client with retries
-✅ **Error Handling**: Comprehensive error reporting and retry logic
+- **Ed25519 Cryptography**: Pure Dart implementation with bit-for-bit compatibility
+- **LID/LTA Derivation**: Exact key-to-URL mapping matching Go/TypeScript
+- **Transaction Building**: Type-safe builders for all v3 operations
+- **Envelope Signing**: Verified signing preimage construction
+- **Network Integration**: Unified v2+v3 JSON-RPC client with retries
+- **Error Handling**: Comprehensive error reporting and retry logic
