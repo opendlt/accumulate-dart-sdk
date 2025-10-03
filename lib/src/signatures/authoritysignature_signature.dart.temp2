@@ -1,0 +1,75 @@
+library;
+
+import 'dart:typed_data';
+import '../enums.dart';
+import '../runtime/validate.dart';
+import '../runtime/bytes.dart';
+import '../runtime/url.dart';
+import 'signatures.dart';
+final class AuthoritySignature extends Signature {
+  final String Origin;
+  final String Authority;
+  final dynamic? Vote;
+  final Uint8List TxID;
+  final Uint8List Cause;
+  final List<String> Delegator;
+  final String? Memo;
+
+  const AuthoritySignature({
+    required this.Origin,
+    required this.Authority,
+    this.Vote,
+    required this.TxID,
+    required this.Cause,
+    required this.Delegator,
+    this.Memo,
+  });
+
+  @override
+  String get $type => 'authority';
+
+  @override
+  Map<String, dynamic> toJson() => {
+      'type': $type,
+      'Origin': Origin,
+      'Authority': Authority
+      if (Vote != null) 'Vote': Vote
+      'TxID': ByteUtils.bytesToJson(TxID)
+      'Cause': ByteUtils.bytesToJson(Cause)
+      'Delegator': Delegator
+      if (Memo != null) 'Memo': Memo,
+    };
+
+  static AuthoritySignature fromJson(Map<String, dynamic> j, [int depth = 0]) {
+    final instance = AuthoritySignature(
+      Origin: j['Origin'] as String
+      Authority: j['Authority'] as String
+      Vote: j['Vote'] as dynamic?
+      TxID: (() { final bytes = ByteUtils.bytesFromJson(j['TxID'] as String); ByteUtils.validateLength(bytes, 32, 'TxID'); return bytes; })()
+      Cause: (() { final bytes = ByteUtils.bytesFromJson(j['Cause'] as String); ByteUtils.validateLength(bytes, 32, 'Cause'); return bytes; })()
+      Delegator: j['Delegator'] as List<String>
+      Memo: j['Memo'] as String?,
+    );
+    return instance;
+  }
+  /// Validate this signature
+  bool validate() {
+    try {
+      // Check required fields exist and are valid
+      
+      // Required field validation
+      if (!Validate.required(signature)) return false;
+
+      // URL validation for acc:// scheme
+      if (signer != null && !signer.startsWith('acc://')) return false;
+
+      // Enum validation for vote field
+      if (vote != null && !Validate.enumValue(vote)) return false;
+
+return true; // Basic validation passed
+    } catch (e) {
+      return false;
+    }
+  }
+
+}
