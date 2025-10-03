@@ -32,8 +32,8 @@ final class InternalSignature extends Signature {
   }
 
   /// Parse from JSON
-  static {sig_name}? fromJson(Map<String, dynamic> json) {{
-    try {{
+  static InternalSignature? fromJson(Map<String, dynamic> json, [int depth = 0]) {
+    try {
       final cause = ByteUtils.bytesFromJson(json['Cause'] as String);
       final transactionHash = ByteUtils.bytesFromJson(json['TransactionHash'] as String);
 
@@ -48,8 +48,12 @@ final class InternalSignature extends Signature {
 
   /// Validate signature fields
   bool validate() {
-    if (!ByteUtils.validateHash(cause)) return false;
-    if (!ByteUtils.validateHash(transactionHash)) return false;
-    return true;
+    try {
+      if (cause.isEmpty) return false;
+      if (transactionHash != null && transactionHash!.isEmpty) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

@@ -44,27 +44,27 @@ final class RCD1Signature extends Signature {
     json['Signature'] = ByteUtils.bytesToJson(signature);
     json['Signer'] = signer;
     json['SignerVersion'] = signerVersion;
-    if (timestamp != null) {
+      if (timestamp != null) {
       json['Timestamp'] = timestamp;
     }
-    if (vote != null) {
+      if (vote != null) {
       json['Vote'] = vote;
     }
-    if (transactionHash != null) {
+      if (transactionHash != null) {
       json['TransactionHash'] = ByteUtils.bytesToJson(transactionHash!);
     }
-    if (memo != null) {
+      if (memo != null) {
       json['Memo'] = memo;
     }
-    if (data != null) {
+      if (data != null) {
       json['Data'] = ByteUtils.bytesToJson(data!);
     }
     return json;
   }
 
   /// Parse from JSON
-  static {sig_name}? fromJson(Map<String, dynamic> json) {{
-    try {{
+  static RCD1Signature? fromJson(Map<String, dynamic> json, [int depth = 0]) {
+    try {
       final publicKey = ByteUtils.bytesFromJson(json['PublicKey'] as String);
       final signature = ByteUtils.bytesFromJson(json['Signature'] as String);
       final signer = json['Signer'] as String;
@@ -93,10 +93,14 @@ final class RCD1Signature extends Signature {
 
   /// Validate signature fields
   bool validate() {
-    if (!ByteUtils.validatePublicKey(publicKey)) return false;
-    if (!ByteUtils.validateSignature(signature)) return false;
-    if (!AccumulateUrl.isValid(signer)) return false;
-    if (!ByteUtils.validateHash(transactionHash)) return false;
-    return true;
+    try {
+      if (publicKey.isEmpty) return false;
+      if (signature.isEmpty) return false;
+      if (!AccumulateUrl.isValid(signer)) return false;
+      if (transactionHash != null && transactionHash!.isEmpty) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

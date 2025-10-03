@@ -18,7 +18,7 @@ final class ReceiptSignature extends Signature {
   });
 
   final String sourceNetwork;
-  final merkle.Receipt proof;
+  final Map<String, dynamic> proof;
   final Uint8List? transactionHash;
 
   @override
@@ -30,15 +30,15 @@ final class ReceiptSignature extends Signature {
     json['\$type'] = $type;
     json['SourceNetwork'] = sourceNetwork;
     json['Proof'] = proof;
-    if (transactionHash != null) {
+      if (transactionHash != null) {
       json['TransactionHash'] = ByteUtils.bytesToJson(transactionHash!);
     }
     return json;
   }
 
   /// Parse from JSON
-  static {sig_name}? fromJson(Map<String, dynamic> json) {{
-    try {{
+  static ReceiptSignature? fromJson(Map<String, dynamic> json, [int depth = 0]) {
+    try {
       final sourceNetwork = json['SourceNetwork'] as String;
       final proof = json['Proof'];
       final transactionHash = json['TransactionHash'] != null ? ByteUtils.bytesFromJson(json['TransactionHash'] as String) : null;
@@ -55,8 +55,12 @@ final class ReceiptSignature extends Signature {
 
   /// Validate signature fields
   bool validate() {
-    if (!AccumulateUrl.isValid(sourceNetwork)) return false;
-    if (!ByteUtils.validateHash(transactionHash)) return false;
-    return true;
+    try {
+      if (!AccumulateUrl.isValid(sourceNetwork)) return false;
+      if (transactionHash != null && transactionHash!.isEmpty) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

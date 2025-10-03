@@ -39,7 +39,7 @@ final class DelegatedSignature extends Signature {
       if (current.Signature == null) break;
       current = current.Signature!;
     }
-    if (current is! DelegatedSignature) {
+      if (current is! DelegatedSignature) {
       chain.add(current);
     }
     return chain;
@@ -55,7 +55,7 @@ final class DelegatedSignature extends Signature {
   }
 
   static int _calculateDepth(DelegatedSignature sig, int current) {
-    if (sig.Signature is DelegatedSignature) {
+      if (sig.Signature is DelegatedSignature) {
       return _calculateDepth(sig.Signature as DelegatedSignature, current + 1);
     }
     return current + 1;

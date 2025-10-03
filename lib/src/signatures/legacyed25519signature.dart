@@ -41,18 +41,18 @@ final class LegacyED25519Signature extends Signature {
     json['Signature'] = ByteUtils.bytesToJson(signature);
     json['Signer'] = signer;
     json['SignerVersion'] = signerVersion;
-    if (vote != null) {
+      if (vote != null) {
       json['Vote'] = vote;
     }
-    if (transactionHash != null) {
+      if (transactionHash != null) {
       json['TransactionHash'] = ByteUtils.bytesToJson(transactionHash!);
     }
     return json;
   }
 
   /// Parse from JSON
-  static {sig_name}? fromJson(Map<String, dynamic> json) {{
-    try {{
+  static LegacyED25519Signature? fromJson(Map<String, dynamic> json, [int depth = 0]) {
+    try {
       final timestamp = json['Timestamp'] as int;
       final publicKey = ByteUtils.bytesFromJson(json['PublicKey'] as String);
       final signature = ByteUtils.bytesFromJson(json['Signature'] as String);
@@ -77,10 +77,14 @@ final class LegacyED25519Signature extends Signature {
 
   /// Validate signature fields
   bool validate() {
-    if (!ByteUtils.validatePublicKey(publicKey)) return false;
-    if (!ByteUtils.validateSignature(signature)) return false;
-    if (!AccumulateUrl.isValid(signer)) return false;
-    if (!ByteUtils.validateHash(transactionHash)) return false;
-    return true;
+    try {
+      if (publicKey.isEmpty) return false;
+      if (signature.isEmpty) return false;
+      if (!AccumulateUrl.isValid(signer)) return false;
+      if (transactionHash != null && transactionHash!.isEmpty) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

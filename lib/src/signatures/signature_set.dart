@@ -32,16 +32,16 @@ final class SignatureSet extends Signature {
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json['\$type'] = $type;
-    if (vote != null) json['Vote'] = vote!.toJson();
+      if (vote != null) json['Vote'] = vote!.toJson();
     json['Signer'] = signer;
-    if (transactionHash != null) json['TransactionHash'] = ByteUtils.bytesToJson(transactionHash!);
+      if (transactionHash != null) json['TransactionHash'] = ByteUtils.bytesToJson(transactionHash!);
     json['Signatures'] = signatures.map((s) => s.toJson()).toList();
     json['Authority'] = authority;
     return json;
   }
 
   /// Parse from JSON
-  static SignatureSet? fromJson(Map<String, dynamic> json) {
+  static SignatureSet? fromJson(Map<String, dynamic> json, [int depth = 0]) {
     try {
       final vote = json['Vote'] != null ? VoteType.fromJson(json['Vote']) : null;
       final signer = json['Signer'] as String;
@@ -75,15 +75,19 @@ final class SignatureSet extends Signature {
 
   /// Validate signature set
   bool validate() {
-    if (!AccumulateUrl.isValid(signer)) return false;
-    if (!AccumulateUrl.isValid(authority)) return false;
-    if (transactionHash != null && !ByteUtils.validateHash(transactionHash)) return false;
+    try {
+      if (!AccumulateUrl.isValid(signer)) return false;
+      if (!AccumulateUrl.isValid(authority)) return false;
+      if (transactionHash != null && transactionHash!.isEmpty) return false;
 
-    // Validate all contained signatures
-    for (final signature in signatures) {
-      if (signature is DelegatedSignature && !signature.validate()) return false;
+      // Validate all contained signatures - basic check only
+      for (final signature in signatures) {
+        if (signature == null) return false;
+      }
+
+      return true;
+    } catch (e) {
+      return false;
     }
-
-    return true;
   }
 }

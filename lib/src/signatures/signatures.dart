@@ -34,7 +34,7 @@ abstract class Signature {
 
   static Signature parseSignature(Map<String, dynamic> j, [int depth = 0]) {
     final key = j.containsKey('type') ? 'type' : (j.containsKey(r'$type') ? r'$type' : null);
-    if (key == null) {
+      if (key == null) {
       throw ArgumentError('Signature missing discriminant key');
     }
 

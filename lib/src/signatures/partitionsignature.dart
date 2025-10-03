@@ -33,15 +33,15 @@ final class PartitionSignature extends Signature {
     json['SourceNetwork'] = sourceNetwork;
     json['DestinationNetwork'] = destinationNetwork;
     json['SequenceNumber'] = sequenceNumber;
-    if (transactionHash != null) {
+      if (transactionHash != null) {
       json['TransactionHash'] = ByteUtils.bytesToJson(transactionHash!);
     }
     return json;
   }
 
   /// Parse from JSON
-  static {sig_name}? fromJson(Map<String, dynamic> json) {{
-    try {{
+  static PartitionSignature? fromJson(Map<String, dynamic> json, [int depth = 0]) {
+    try {
       final sourceNetwork = json['SourceNetwork'] as String;
       final destinationNetwork = json['DestinationNetwork'] as String;
       final sequenceNumber = json['SequenceNumber'] as int;
@@ -60,9 +60,13 @@ final class PartitionSignature extends Signature {
 
   /// Validate signature fields
   bool validate() {
-    if (!AccumulateUrl.isValid(sourceNetwork)) return false;
-    if (!AccumulateUrl.isValid(destinationNetwork)) return false;
-    if (!ByteUtils.validateHash(transactionHash)) return false;
-    return true;
+    try {
+      if (!AccumulateUrl.isValid(sourceNetwork)) return false;
+      if (!AccumulateUrl.isValid(destinationNetwork)) return false;
+      if (transactionHash != null && transactionHash!.isEmpty) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

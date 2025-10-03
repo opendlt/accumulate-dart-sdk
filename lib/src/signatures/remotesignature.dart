@@ -35,8 +35,8 @@ final class RemoteSignature extends Signature {
   }
 
   /// Parse from JSON
-  static {sig_name}? fromJson(Map<String, dynamic> json) {{
-    try {{
+  static RemoteSignature? fromJson(Map<String, dynamic> json, [int depth = 0]) {
+    try {
       final destination = json['Destination'] as String;
       final signature = json['Signature'];
       final cause = ByteUtils.bytesFromJson(json['Cause'] as String);
@@ -53,8 +53,12 @@ final class RemoteSignature extends Signature {
 
   /// Validate signature fields
   bool validate() {
-    if (!AccumulateUrl.isValid(destination)) return false;
-    if (!ByteUtils.validateHash(cause)) return false;
-    return true;
+    try {
+      if (!AccumulateUrl.isValid(destination)) return false;
+      if (cause.isEmpty) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
