@@ -29,24 +29,29 @@ final class AnchorLedger {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
+    'MinorBlockSequenceNumber': minorBlockSequenceNumber,
     'MajorBlockIndex': majorBlockIndex,
     'MajorBlockTime': majorBlockTime.millisecondsSinceEpoch,
-    'MinorBlockSequenceNumber': minorBlockSequenceNumber,
     'PendingMajorBlockAnchors': pendingMajorBlockAnchors,
     'Sequence': sequence,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(majorBlockTime, 'majorBlockTime');
+    Validators.validateRequired(pendingMajorBlockAnchors, 'pendingMajorBlockAnchors');
     Validators.validateUrl(pendingMajorBlockAnchors, 'pendingMajorBlockAnchors');
+    Validators.validateRequired(sequence, 'sequence');
   }
 }
+
 
 /// Protocol type: BlockLedger
 final class BlockLedger {
@@ -67,21 +72,25 @@ final class BlockLedger {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Entries': entries,
+    final map = <String, dynamic>{    'Url': url,
     'Index': index,
     'Time': time.millisecondsSinceEpoch,
-    'Url': url,
-    };
+    'Entries': entries,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(time, 'time');
+    Validators.validateRequired(entries, 'entries');
   }
 }
+
 
 /// Protocol type: BlockValidatorAnchor
 final class BlockValidatorAnchor {
@@ -96,18 +105,20 @@ final class BlockValidatorAnchor {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AcmeBurnt': acmeBurnt.toString(),
-    };
+    final map = <String, dynamic>{    'AcmeBurnt': CanonHelpers.bigIntToJson(acmeBurnt),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(acmeBurnt, 'acmeBurnt');
     Validators.validateBigInt(acmeBurnt, 'acmeBurnt');
   }
 }
+
 
 /// Protocol type: DirectoryAnchor
 final class DirectoryAnchor {
@@ -128,21 +139,24 @@ final class DirectoryAnchor {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Updates': updates,
+    'Receipts': receipts,
     'MakeMajorBlock': makeMajorBlock,
     'MakeMajorBlockTime': makeMajorBlockTime.millisecondsSinceEpoch,
-    'Receipts': receipts,
-    'Updates': updates,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(updates, 'updates');
+    Validators.validateRequired(receipts, 'receipts');
+    Validators.validateRequired(makeMajorBlockTime, 'makeMajorBlockTime');
   }
 }
+
 
 /// Protocol type: NetworkAccountUpdate
 final class NetworkAccountUpdate {
@@ -159,19 +173,21 @@ final class NetworkAccountUpdate {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Name': name,
     'Body': body,
-    'Name': name,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(name, 'name');
+    Validators.validateRequired(body, 'body');
   }
 }
+
 
 /// Protocol type: PartitionAnchor
 final class PartitionAnchor {
@@ -196,29 +212,33 @@ final class PartitionAnchor {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Source': source,
     'MajorBlockIndex': majorBlockIndex,
     'MinorBlockIndex': minorBlockIndex,
-    'RootChainAnchor': CanonHelpers.uint8ListToBase64(rootChainAnchor),
     'RootChainIndex': rootChainIndex,
-    'Source': source,
+    'RootChainAnchor': CanonHelpers.uint8ListToBase64(rootChainAnchor),
     'StateTreeAnchor': CanonHelpers.uint8ListToBase64(stateTreeAnchor),
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(source, 'source');
     Validators.validateUrl(source, 'source');
+    Validators.validateRequired(rootChainAnchor, 'rootChainAnchor');
     Validators.validateHash32(rootChainAnchor, 'rootChainAnchor');
+    Validators.validateRequired(stateTreeAnchor, 'stateTreeAnchor');
     Validators.validateHash32(stateTreeAnchor, 'stateTreeAnchor');
   }
 }
 
+
 /// Protocol type: PartitionAnchorReceipt
 final class PartitionAnchorReceipt {
-  final PartitionAnchor anchor;
+  final dynamic anchor;
   final dynamic rootChainReceipt;
 
   const PartitionAnchorReceipt({required this.anchor, required this.rootChainReceipt});
@@ -226,24 +246,26 @@ final class PartitionAnchorReceipt {
   /// Create from JSON map
   factory PartitionAnchorReceipt.fromJson(Map<String, dynamic> json) {
     return PartitionAnchorReceipt(
-    anchor: json['Anchor'] as PartitionAnchor,
+    anchor: json['Anchor'] as dynamic,
     rootChainReceipt: json['RootChainReceipt'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Anchor': anchor,
+    final map = <String, dynamic>{    'Anchor': anchor,
     'RootChainReceipt': rootChainReceipt,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(anchor, 'anchor');
+    Validators.validateRequired(rootChainReceipt, 'rootChainReceipt');
   }
 }
+
 
 /// Protocol type: PartitionExecutorVersion
 final class PartitionExecutorVersion {
@@ -260,19 +282,21 @@ final class PartitionExecutorVersion {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Partition': partition,
+    final map = <String, dynamic>{    'Partition': partition,
     'Version': version,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(partition, 'partition');
+    Validators.validateRequired(version, 'version');
   }
 }
+
 
 /// Protocol type: PartitionSyntheticLedger
 final class PartitionSyntheticLedger {
@@ -280,7 +304,7 @@ final class PartitionSyntheticLedger {
   final int produced;
   final int received;
   final int delivered;
-  final String pending;
+  final dynamic pending;
 
   const PartitionSyntheticLedger({required this.url, required this.produced, required this.received, required this.delivered, required this.pending});
 
@@ -291,26 +315,29 @@ final class PartitionSyntheticLedger {
     produced: json['Produced'] as int,
     received: json['Received'] as int,
     delivered: json['Delivered'] as int,
-    pending: json['Pending'] as String,
+    pending: json['Pending'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Delivered': delivered,
-    'Pending': pending,
+    final map = <String, dynamic>{    'Url': url,
     'Produced': produced,
     'Received': received,
-    'Url': url,
-    };
+    'Delivered': delivered,
+    'Pending': pending,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(pending, 'pending');
   }
 }
+
 
 /// Protocol type: SyntheticLedger
 final class SyntheticLedger {
@@ -327,45 +354,43 @@ final class SyntheticLedger {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'Sequence': sequence,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(sequence, 'sequence');
   }
 }
 
+
 /// Protocol type: SystemGenesis
 final class SystemGenesis {
-
-
   const SystemGenesis();
 
   /// Create from JSON map
   factory SystemGenesis.fromJson(Map<String, dynamic> json) {
-    return SystemGenesis(
-
-    );
+    return SystemGenesis();
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-
-    };
+    return CanonicalJson.sortMap(<String, dynamic>{});
   }
 
   /// Validate the object
   void validate() {
-
+    // No fields to validate
   }
 }
+
 
 /// Protocol type: SystemLedger
 final class SystemLedger {
@@ -394,26 +419,34 @@ final class SystemLedger {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AcmeBurnt': acmeBurnt.toString(),
-    'Anchor': anchor,
-    'BvnExecutorVersions': bvnExecutorVersions,
-    'ExecutorVersion': executorVersion,
+    final map = <String, dynamic>{    'Url': url,
     'Index': index,
-    'PendingUpdates': pendingUpdates,
     'Timestamp': timestamp.millisecondsSinceEpoch,
-    'Url': url,
-    };
+    'AcmeBurnt': CanonHelpers.bigIntToJson(acmeBurnt),
+    'PendingUpdates': pendingUpdates,
+    'Anchor': anchor,
+    'ExecutorVersion': executorVersion,
+    'BvnExecutorVersions': bvnExecutorVersions,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(timestamp, 'timestamp');
+    Validators.validateRequired(acmeBurnt, 'acmeBurnt');
     Validators.validateBigInt(acmeBurnt, 'acmeBurnt');
+    Validators.validateRequired(pendingUpdates, 'pendingUpdates');
+    Validators.validateRequired(anchor, 'anchor');
+    Validators.validateRequired(executorVersion, 'executorVersion');
+    Validators.validateRequired(bvnExecutorVersions, 'bvnExecutorVersions');
   }
 }
+
 
 /// Protocol type: SystemWriteData
 final class SystemWriteData {
@@ -430,17 +463,18 @@ final class SystemWriteData {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Entry': entry,
+    final map = <String, dynamic>{    'Entry': entry,
     'WriteToState': writeToState,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
