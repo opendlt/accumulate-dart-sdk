@@ -7,29 +7,30 @@ import '../runtime/validators.dart';
 
 /// Protocol type: AccountAuth
 final class AccountAuth {
-  final AuthorityEntry authorities;
+  final dynamic authorities;
 
   const AccountAuth({required this.authorities});
 
   /// Create from JSON map
   factory AccountAuth.fromJson(Map<String, dynamic> json) {
     return AccountAuth(
-    authorities: json['Authorities'] as AuthorityEntry,
+    authorities: json['Authorities'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Authorities': authorities,
-    };
+    final map = <String, dynamic>{    'Authorities': authorities,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(authorities, 'authorities');
   }
 }
+
 
 /// Protocol type: AccumulateDataEntry
 final class AccumulateDataEntry {
@@ -44,18 +45,19 @@ final class AccumulateDataEntry {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Data': CanonHelpers.uint8ListToBase64(data),
-    };
+    final map = <String, dynamic>{    'Data': CanonHelpers.uint8ListToBase64(data),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(data, 'data');
   }
 }
+
 
 /// Protocol type: AcmeOracle
 final class AcmeOracle {
@@ -70,18 +72,19 @@ final class AcmeOracle {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Price': price,
-    };
+    final map = <String, dynamic>{    'Price': price,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    // No validation required
   }
 }
+
 
 /// Protocol type: AnchorMetadata
 final class AnchorMetadata {
@@ -104,27 +107,30 @@ final class AnchorMetadata {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Account': account,
-    'Entry': CanonHelpers.uint8ListToBase64(entry),
+    final map = <String, dynamic>{    'Account': account,
     'Index': index,
-    'SourceBlock': sourceBlock,
     'SourceIndex': sourceIndex,
-    };
+    'SourceBlock': sourceBlock,
+    'Entry': CanonHelpers.uint8ListToBase64(entry),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(account, 'account');
     Validators.validateUrl(account, 'account');
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
 /// Protocol type: AnnotatedReceipt
 final class AnnotatedReceipt {
   final dynamic receipt;
-  final AnchorMetadata anchor;
+  final dynamic anchor;
 
   const AnnotatedReceipt({required this.receipt, required this.anchor});
 
@@ -132,23 +138,25 @@ final class AnnotatedReceipt {
   factory AnnotatedReceipt.fromJson(Map<String, dynamic> json) {
     return AnnotatedReceipt(
     receipt: json['Receipt'] as dynamic,
-    anchor: json['Anchor'] as AnchorMetadata,
+    anchor: json['Anchor'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Receipt': receipt,
     'Anchor': anchor,
-    'Receipt': receipt,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(receipt, 'receipt');
+    Validators.validateRequired(anchor, 'anchor');
   }
 }
+
 
 /// Protocol type: AuthorityEntry
 final class AuthorityEntry {
@@ -165,19 +173,21 @@ final class AuthorityEntry {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'Disabled': disabled,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
 /// Protocol type: BlockEntry
 final class BlockEntry {
@@ -196,20 +206,23 @@ final class BlockEntry {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Account': account,
+    final map = <String, dynamic>{    'Account': account,
     'Chain': chain,
     'Index': index,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(account, 'account');
     Validators.validateUrl(account, 'account');
+    Validators.validateRequired(chain, 'chain');
   }
 }
+
 
 /// Protocol type: ChainMetadata
 final class ChainMetadata {
@@ -226,19 +239,21 @@ final class ChainMetadata {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Name': name,
+    final map = <String, dynamic>{    'Name': name,
     'Type': type,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(name, 'name');
+    Validators.validateRequired(type, 'type');
   }
 }
+
 
 /// Protocol type: CreditRecipient
 final class CreditRecipient {
@@ -255,19 +270,21 @@ final class CreditRecipient {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'Amount': amount,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
 /// Protocol type: DoubleHashDataEntry
 final class DoubleHashDataEntry {
@@ -282,18 +299,19 @@ final class DoubleHashDataEntry {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Data': CanonHelpers.uint8ListToBase64(data),
-    };
+    final map = <String, dynamic>{    'Data': CanonHelpers.uint8ListToBase64(data),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(data, 'data');
   }
 }
+
 
 /// Protocol type: FactomDataEntry
 final class FactomDataEntry {
@@ -312,46 +330,51 @@ final class FactomDataEntry {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AccountId': CanonHelpers.uint8ListToBase64(accountId),
+    final map = <String, dynamic>{    'AccountId': CanonHelpers.uint8ListToBase64(accountId),
     'Data': CanonHelpers.uint8ListToBase64(data),
     'ExtIds': CanonHelpers.uint8ListToBase64(extIds),
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(accountId, 'accountId');
     Validators.validateHash32(accountId, 'accountId');
+    Validators.validateRequired(data, 'data');
+    Validators.validateRequired(extIds, 'extIds');
   }
 }
 
+
 /// Protocol type: FactomDataEntryWrapper
 final class FactomDataEntryWrapper {
-  final FactomDataEntry entry;
+  final dynamic entry;
 
   const FactomDataEntryWrapper({required this.entry});
 
   /// Create from JSON map
   factory FactomDataEntryWrapper.fromJson(Map<String, dynamic> json) {
     return FactomDataEntryWrapper(
-    entry: json['FactomDataEntry'] as FactomDataEntry,
+    entry: json['FactomDataEntry'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'FactomDataEntry': entry,
-    };
+    final map = <String, dynamic>{    'FactomDataEntry': entry,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
 /// Protocol type: FeeSchedule
 final class FeeSchedule {
@@ -370,20 +393,23 @@ final class FeeSchedule {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'BareIdentityDiscount': bareIdentityDiscount,
-    'CreateIdentitySliding': createIdentitySliding,
+    final map = <String, dynamic>{    'CreateIdentitySliding': createIdentitySliding,
     'CreateSubIdentity': createSubIdentity,
-    };
+    'BareIdentityDiscount': bareIdentityDiscount,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(createIdentitySliding, 'createIdentitySliding');
+    Validators.validateRequired(createSubIdentity, 'createSubIdentity');
+    Validators.validateRequired(bareIdentityDiscount, 'bareIdentityDiscount');
   }
 }
+
 
 /// Protocol type: IndexEntry
 final class IndexEntry {
@@ -406,22 +432,23 @@ final class IndexEntry {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Source': source,
     'Anchor': anchor,
     'BlockIndex': blockIndex,
     'BlockTime': blockTime.millisecondsSinceEpoch,
     'RootIndexIndex': rootIndexIndex,
-    'Source': source,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(blockTime, 'blockTime');
   }
 }
+
 
 /// Protocol type: KeySpec
 final class KeySpec {
@@ -440,27 +467,31 @@ final class KeySpec {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Delegate': delegate,
+    final map = <String, dynamic>{    'PublicKeyHash': CanonHelpers.uint8ListToBase64(publicKeyHash),
     'LastUsedOn': lastUsedOn,
-    'PublicKeyHash': CanonHelpers.uint8ListToBase64(publicKeyHash),
-    };
+    'Delegate': delegate,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(publicKeyHash, 'publicKeyHash');
+    Validators.validateHash32(publicKeyHash, 'publicKeyHash');
+    Validators.validateRequired(delegate, 'delegate');
     Validators.validateUrl(delegate, 'delegate');
   }
 }
+
 
 /// Protocol type: NetworkDefinition
 final class NetworkDefinition {
   final String networkName;
   final int version;
-  final PartitionInfo partitions;
-  final ValidatorInfo validators;
+  final dynamic partitions;
+  final dynamic validators;
 
   const NetworkDefinition({required this.networkName, required this.version, required this.partitions, required this.validators});
 
@@ -469,67 +500,75 @@ final class NetworkDefinition {
     return NetworkDefinition(
     networkName: json['NetworkName'] as String,
     version: json['Version'] as int,
-    partitions: json['Partitions'] as PartitionInfo,
-    validators: json['Validators'] as ValidatorInfo,
+    partitions: json['Partitions'] as dynamic,
+    validators: json['Validators'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'NetworkName': networkName,
+    final map = <String, dynamic>{    'NetworkName': networkName,
+    'Version': version,
     'Partitions': partitions,
     'Validators': validators,
-    'Version': version,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(networkName, 'networkName');
+    Validators.validateRequired(partitions, 'partitions');
+    Validators.validateRequired(validators, 'validators');
   }
 }
 
+
 /// Protocol type: NetworkGlobals
 final class NetworkGlobals {
-  final Rational operatorAcceptThreshold;
-  final Rational validatorAcceptThreshold;
+  final dynamic operatorAcceptThreshold;
+  final dynamic validatorAcceptThreshold;
   final String majorBlockSchedule;
   final bool anchorEmptyBlocks;
-  final FeeSchedule feeSchedule;
-  final NetworkLimits limits;
+  final dynamic feeSchedule;
+  final dynamic limits;
 
   const NetworkGlobals({required this.operatorAcceptThreshold, required this.validatorAcceptThreshold, required this.majorBlockSchedule, required this.anchorEmptyBlocks, required this.feeSchedule, required this.limits});
 
   /// Create from JSON map
   factory NetworkGlobals.fromJson(Map<String, dynamic> json) {
     return NetworkGlobals(
-    operatorAcceptThreshold: json['OperatorAcceptThreshold'] as Rational,
-    validatorAcceptThreshold: json['ValidatorAcceptThreshold'] as Rational,
+    operatorAcceptThreshold: json['OperatorAcceptThreshold'] as dynamic,
+    validatorAcceptThreshold: json['ValidatorAcceptThreshold'] as dynamic,
     majorBlockSchedule: json['MajorBlockSchedule'] as String,
     anchorEmptyBlocks: json['AnchorEmptyBlocks'] as bool,
-    feeSchedule: json['FeeSchedule'] as FeeSchedule,
-    limits: json['Limits'] as NetworkLimits,
+    feeSchedule: json['FeeSchedule'] as dynamic,
+    limits: json['Limits'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'OperatorAcceptThreshold': operatorAcceptThreshold,
+    'ValidatorAcceptThreshold': validatorAcceptThreshold,
+    'MajorBlockSchedule': majorBlockSchedule,
     'AnchorEmptyBlocks': anchorEmptyBlocks,
     'FeeSchedule': feeSchedule,
     'Limits': limits,
-    'MajorBlockSchedule': majorBlockSchedule,
-    'OperatorAcceptThreshold': operatorAcceptThreshold,
-    'ValidatorAcceptThreshold': validatorAcceptThreshold,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(operatorAcceptThreshold, 'operatorAcceptThreshold');
+    Validators.validateRequired(validatorAcceptThreshold, 'validatorAcceptThreshold');
+    Validators.validateRequired(majorBlockSchedule, 'majorBlockSchedule');
+    Validators.validateRequired(feeSchedule, 'feeSchedule');
+    Validators.validateRequired(limits, 'limits');
   }
 }
+
 
 /// Protocol type: NetworkLimits
 final class NetworkLimits {
@@ -556,30 +595,31 @@ final class NetworkLimits {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'DataEntryParts': dataEntryParts,
     'AccountAuthorities': accountAuthorities,
     'BookPages': bookPages,
-    'DataEntryParts': dataEntryParts,
-    'EventsPerBlock': eventsPerBlock,
-    'IdentityAccounts': identityAccounts,
     'PageEntries': pageEntries,
+    'IdentityAccounts': identityAccounts,
     'PendingMajorBlocks': pendingMajorBlocks,
-    };
+    'EventsPerBlock': eventsPerBlock,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    // No validation required
   }
 }
+
 
 /// Protocol type: Object
 final class Object {
   final dynamic type;
-  final ChainMetadata chains;
-  final TxIdSet pending;
+  final dynamic chains;
+  final dynamic pending;
 
   const Object({required this.type, required this.chains, required this.pending});
 
@@ -587,25 +627,28 @@ final class Object {
   factory Object.fromJson(Map<String, dynamic> json) {
     return Object(
     type: json['Type'] as dynamic,
-    chains: json['Chains'] as ChainMetadata,
-    pending: json['Pending'] as TxIdSet,
+    chains: json['Chains'] as dynamic,
+    pending: json['Pending'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Type': type,
     'Chains': chains,
     'Pending': pending,
-    'Type': type,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(type, 'type');
+    Validators.validateRequired(chains, 'chains');
+    Validators.validateRequired(pending, 'pending');
   }
 }
+
 
 /// Protocol type: PartitionInfo
 final class PartitionInfo {
@@ -622,19 +665,21 @@ final class PartitionInfo {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'ID': iD,
+    final map = <String, dynamic>{    'ID': iD,
     'Type': type,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(iD, 'iD');
+    Validators.validateRequired(type, 'type');
   }
 }
+
 
 /// Protocol type: Rational
 final class Rational {
@@ -651,19 +696,20 @@ final class Rational {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Numerator': numerator,
     'Denominator': denominator,
-    'Numerator': numerator,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    // No validation required
   }
 }
+
 
 /// Protocol type: Route
 final class Route {
@@ -682,20 +728,21 @@ final class Route {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Length': length,
-    'Partition': partition,
+    final map = <String, dynamic>{    'Length': length,
     'Value': value,
-    };
+    'Partition': partition,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(partition, 'partition');
   }
 }
+
 
 /// Protocol type: RouteOverride
 final class RouteOverride {
@@ -712,48 +759,53 @@ final class RouteOverride {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Account': account,
+    final map = <String, dynamic>{    'Account': account,
     'Partition': partition,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(account, 'account');
     Validators.validateUrl(account, 'account');
+    Validators.validateRequired(partition, 'partition');
   }
 }
 
+
 /// Protocol type: RoutingTable
 final class RoutingTable {
-  final RouteOverride overrides;
-  final Route routes;
+  final dynamic overrides;
+  final dynamic routes;
 
   const RoutingTable({required this.overrides, required this.routes});
 
   /// Create from JSON map
   factory RoutingTable.fromJson(Map<String, dynamic> json) {
     return RoutingTable(
-    overrides: json['Overrides'] as RouteOverride,
-    routes: json['Routes'] as Route,
+    overrides: json['Overrides'] as dynamic,
+    routes: json['Routes'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Overrides': overrides,
+    final map = <String, dynamic>{    'Overrides': overrides,
     'Routes': routes,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(overrides, 'overrides');
+    Validators.validateRequired(routes, 'routes');
   }
 }
+
 
 /// Protocol type: TokenIssuerProof
 final class TokenIssuerProof {
@@ -770,19 +822,21 @@ final class TokenIssuerProof {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Transaction': transaction,
     'Receipt': receipt,
-    'Transaction': transaction,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(transaction, 'transaction');
+    Validators.validateRequired(receipt, 'receipt');
   }
 }
+
 
 /// Protocol type: TokenRecipient
 final class TokenRecipient {
@@ -799,53 +853,57 @@ final class TokenRecipient {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount.toString(),
-    'Url': url,
-    };
+    final map = <String, dynamic>{    'Url': url,
+    'Amount': CanonHelpers.bigIntToJson(amount),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
   }
 }
 
+
 /// Protocol type: TxIdSet
 final class TxIdSet {
-  final String entries;
+  final dynamic entries;
 
   const TxIdSet({required this.entries});
 
   /// Create from JSON map
   factory TxIdSet.fromJson(Map<String, dynamic> json) {
     return TxIdSet(
-    entries: json['Entries'] as String,
+    entries: json['Entries'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Entries': entries,
-    };
+    final map = <String, dynamic>{    'Entries': entries,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(entries, 'entries');
   }
 }
+
 
 /// Protocol type: ValidatorInfo
 final class ValidatorInfo {
   final Uint8List publicKey;
   final Uint8List publicKeyHash;
   final String operator;
-  final ValidatorPartitionInfo partitions;
+  final dynamic partitions;
 
   const ValidatorInfo({required this.publicKey, required this.publicKeyHash, required this.operator, required this.partitions});
 
@@ -855,26 +913,31 @@ final class ValidatorInfo {
     publicKey: CanonHelpers.base64ToUint8List(json['PublicKey'] as String),
     publicKeyHash: CanonHelpers.base64ToUint8List(json['PublicKeyHash'] as String),
     operator: json['Operator'] as String,
-    partitions: json['Partitions'] as ValidatorPartitionInfo,
+    partitions: json['Partitions'] as dynamic,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'PublicKey': CanonHelpers.uint8ListToBase64(publicKey),
+    'PublicKeyHash': CanonHelpers.uint8ListToBase64(publicKeyHash),
     'Operator': operator,
     'Partitions': partitions,
-    'PublicKey': CanonHelpers.uint8ListToBase64(publicKey),
-    'PublicKeyHash': CanonHelpers.uint8ListToBase64(publicKeyHash),
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(publicKey, 'publicKey');
+    Validators.validateRequired(publicKeyHash, 'publicKeyHash');
     Validators.validateHash32(publicKeyHash, 'publicKeyHash');
+    Validators.validateRequired(operator, 'operator');
     Validators.validateUrl(operator, 'operator');
+    Validators.validateRequired(partitions, 'partitions');
   }
 }
+
 
 /// Protocol type: ValidatorPartitionInfo
 final class ValidatorPartitionInfo {
@@ -891,17 +954,18 @@ final class ValidatorPartitionInfo {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'ID': iD,
     'Active': active,
-    'ID': iD,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(iD, 'iD');
   }
 }
+
 
