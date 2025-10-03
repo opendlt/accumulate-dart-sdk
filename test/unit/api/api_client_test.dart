@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'dart:io';
-import '../../lib/src/api/client.dart';
+import 'package:opendlt_accumulate/src/api/client.dart';
 
 /// Resolve a base RPC root (no /v2 or /v3 suffix) from env, with sensible defaults.
 /// Priority:

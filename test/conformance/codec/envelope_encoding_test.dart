@@ -2,7 +2,7 @@ import "dart:convert";
 import "dart:typed_data";
 import "package:test/test.dart";
 import "package:opendlt_accumulate/src/codec/codec.dart";
-import "golden_loader.dart";
+import "../../support/golden_loader.dart";
 
 void main() {
   group("Envelope encoding conformance", () {

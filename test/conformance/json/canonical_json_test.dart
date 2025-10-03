@@ -1,7 +1,7 @@
 import "dart:convert";
 import "package:test/test.dart";
 import "package:opendlt_accumulate/src/util/json_canonical.dart";
-import "golden_loader.dart";
+import "../../support/golden_loader.dart";
 
 void main() {
   group("Canonical JSON conformance", () {

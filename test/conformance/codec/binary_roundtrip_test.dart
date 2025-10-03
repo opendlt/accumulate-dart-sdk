@@ -1,7 +1,7 @@
 import "dart:typed_data";
 import "package:test/test.dart";
 import "package:opendlt_accumulate/src/codec/binary.dart";
-import "golden_loader.dart";
+import "../../support/golden_loader.dart";
 
 void main() {
   group("Binary codec roundtrip", () {

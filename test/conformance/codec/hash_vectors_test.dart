@@ -3,7 +3,7 @@ import "dart:io";
 import "package:test/test.dart";
 import "package:opendlt_accumulate/src/util/bytes.dart";
 import "package:opendlt_accumulate/src/codec/hash.dart";
-import "golden_loader.dart";
+import "../../support/golden_loader.dart";
 
 void main() {
   group("Hash vector conformance (sha256)", () {

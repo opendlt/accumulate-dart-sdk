@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'dart:typed_data';
-import '../../lib/opendlt_accumulate.dart';
+import 'package:opendlt_accumulate/opendlt_accumulate.dart';
 
 void main() {
   group('Error Handling Tests', () {

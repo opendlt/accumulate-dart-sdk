@@ -1,10 +1,10 @@
 import 'package:test/test.dart';
 import 'dart:typed_data';
-import '../../lib/src/transactions/transaction_header.dart';
-import '../../lib/src/transactions/bodies/createidentity.dart';
-import '../../lib/src/transactions/bodies/sendtokens.dart';
-import '../../lib/src/transactions/bodies/addcredits.dart';
-import '../../lib/src/transactions/bodies/createtoken.dart';
+import 'package:opendlt_accumulate/src/transactions/transaction_header.dart';
+import 'package:opendlt_accumulate/src/transactions/bodies/createidentity.dart';
+import 'package:opendlt_accumulate/src/transactions/bodies/sendtokens.dart';
+import 'package:opendlt_accumulate/src/transactions/bodies/addcredits.dart';
+import 'package:opendlt_accumulate/src/transactions/bodies/createtoken.dart';
 
 void main() {
   group('Field Validation Tests', () {

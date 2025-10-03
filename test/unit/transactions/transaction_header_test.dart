@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'dart:typed_data';
-import '../../lib/src/transactions/transaction_header.dart';
+import 'package:opendlt_accumulate/src/transactions/transaction_header.dart';
 
 void main() {
   group('TransactionHeader Tests', () {
