@@ -19,18 +19,20 @@ final class AcmeFaucet {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Url': url,
-    };
+    final map = <String, dynamic>{    'Url': url,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
 /// Protocol type: ActivateProtocolVersion
 final class ActivateProtocolVersion {
@@ -45,18 +47,19 @@ final class ActivateProtocolVersion {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Version': version,
-    };
+    final map = <String, dynamic>{    'Version': version,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(version, 'version');
   }
 }
+
 
 /// Protocol type: AddCredits
 final class AddCredits {
@@ -75,21 +78,24 @@ final class AddCredits {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount.toString(),
+    final map = <String, dynamic>{    'Recipient': recipient,
+    'Amount': CanonHelpers.bigIntToJson(amount),
     'Oracle': oracle,
-    'Recipient': recipient,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(recipient, 'recipient');
     Validators.validateUrl(recipient, 'recipient');
+    Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
   }
 }
+
 
 /// Protocol type: BurnCredits
 final class BurnCredits {
@@ -104,18 +110,19 @@ final class BurnCredits {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount,
-    };
+    final map = <String, dynamic>{    'Amount': amount,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    // No validation required
   }
 }
+
 
 /// Protocol type: BurnTokens
 final class BurnTokens {
@@ -130,18 +137,20 @@ final class BurnTokens {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount.toString(),
-    };
+    final map = <String, dynamic>{    'Amount': CanonHelpers.bigIntToJson(amount),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
   }
 }
+
 
 /// Protocol type: CreateDataAccount
 final class CreateDataAccount {
@@ -158,20 +167,23 @@ final class CreateDataAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'Authorities': authorities,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(authorities, 'authorities');
     Validators.validateUrl(authorities, 'authorities');
   }
 }
+
 
 /// Protocol type: CreateIdentity
 final class CreateIdentity {
@@ -192,23 +204,29 @@ final class CreateIdentity {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Authorities': authorities,
-    'KeyBookUrl': keyBookUrl,
+    final map = <String, dynamic>{    'Url': url,
     'KeyHash': CanonHelpers.uint8ListToBase64(keyHash),
-    'Url': url,
-    };
+    'KeyBookUrl': keyBookUrl,
+    'Authorities': authorities,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(keyHash, 'keyHash');
+    Validators.validateHash32(keyHash, 'keyHash');
+    Validators.validateRequired(keyBookUrl, 'keyBookUrl');
     Validators.validateUrl(keyBookUrl, 'keyBookUrl');
+    Validators.validateRequired(authorities, 'authorities');
     Validators.validateUrl(authorities, 'authorities');
   }
 }
+
 
 /// Protocol type: CreateKeyBook
 final class CreateKeyBook {
@@ -227,21 +245,26 @@ final class CreateKeyBook {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Authorities': authorities,
+    final map = <String, dynamic>{    'Url': url,
     'PublicKeyHash': CanonHelpers.uint8ListToBase64(publicKeyHash),
-    'Url': url,
-    };
+    'Authorities': authorities,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(publicKeyHash, 'publicKeyHash');
+    Validators.validateHash32(publicKeyHash, 'publicKeyHash');
+    Validators.validateRequired(authorities, 'authorities');
     Validators.validateUrl(authorities, 'authorities');
   }
 }
+
 
 /// Protocol type: CreateKeyPage
 final class CreateKeyPage {
@@ -256,44 +279,40 @@ final class CreateKeyPage {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Keys': keys,
-    };
+    final map = <String, dynamic>{    'Keys': keys,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(keys, 'keys');
   }
 }
 
+
 /// Protocol type: CreateLiteTokenAccount
 final class CreateLiteTokenAccount {
-
-
   const CreateLiteTokenAccount();
 
   /// Create from JSON map
   factory CreateLiteTokenAccount.fromJson(Map<String, dynamic> json) {
-    return CreateLiteTokenAccount(
-
-    );
+    return CreateLiteTokenAccount();
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-
-    };
+    return CanonicalJson.sortMap(<String, dynamic>{});
   }
 
   /// Validate the object
   void validate() {
-
+    // No fields to validate
   }
 }
+
 
 /// Protocol type: CreateToken
 final class CreateToken {
@@ -318,26 +337,32 @@ final class CreateToken {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Authorities': authorities,
+    final map = <String, dynamic>{    'Url': url,
+    'Symbol': symbol,
     'Precision': precision,
     'Properties': properties,
-    'SupplyLimit': supplyLimit.toString(),
-    'Symbol': symbol,
-    'Url': url,
-    };
+    'SupplyLimit': CanonHelpers.bigIntToJson(supplyLimit),
+    'Authorities': authorities,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(symbol, 'symbol');
+    Validators.validateRequired(properties, 'properties');
     Validators.validateUrl(properties, 'properties');
+    Validators.validateRequired(supplyLimit, 'supplyLimit');
     Validators.validateBigInt(supplyLimit, 'supplyLimit');
+    Validators.validateRequired(authorities, 'authorities');
     Validators.validateUrl(authorities, 'authorities');
   }
 }
+
 
 /// Protocol type: CreateTokenAccount
 final class CreateTokenAccount {
@@ -358,23 +383,28 @@ final class CreateTokenAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
+    'TokenUrl': tokenUrl,
     'Authorities': authorities,
     'Proof': proof,
-    'TokenUrl': tokenUrl,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(tokenUrl, 'tokenUrl');
     Validators.validateUrl(tokenUrl, 'tokenUrl');
+    Validators.validateRequired(authorities, 'authorities');
     Validators.validateUrl(authorities, 'authorities');
+    Validators.validateRequired(proof, 'proof');
   }
 }
+
 
 /// Protocol type: IssueTokens
 final class IssueTokens {
@@ -393,21 +423,25 @@ final class IssueTokens {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount.toString(),
-    'Recipient': recipient,
+    final map = <String, dynamic>{    'Recipient': recipient,
+    'Amount': CanonHelpers.bigIntToJson(amount),
     'To': to,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(recipient, 'recipient');
     Validators.validateUrl(recipient, 'recipient');
+    Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
+    Validators.validateRequired(to, 'to');
   }
 }
+
 
 /// Protocol type: LockAccount
 final class LockAccount {
@@ -422,18 +456,19 @@ final class LockAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Height': height,
-    };
+    final map = <String, dynamic>{    'Height': height,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    // No validation required
   }
 }
+
 
 /// Protocol type: NetworkMaintenance
 final class NetworkMaintenance {
@@ -448,18 +483,19 @@ final class NetworkMaintenance {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Operations': operations,
-    };
+    final map = <String, dynamic>{    'Operations': operations,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(operations, 'operations');
   }
 }
+
 
 /// Protocol type: RemoteTransaction
 final class RemoteTransaction {
@@ -474,18 +510,20 @@ final class RemoteTransaction {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Hash': CanonHelpers.uint8ListToBase64(hash),
-    };
+    final map = <String, dynamic>{    'Hash': CanonHelpers.uint8ListToBase64(hash),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(hash, 'hash');
     Validators.validateHash32(hash, 'hash');
   }
 }
+
 
 /// Protocol type: SendTokens
 final class SendTokens {
@@ -504,20 +542,24 @@ final class SendTokens {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Hash': CanonHelpers.uint8ListToBase64(hash),
+    final map = <String, dynamic>{    'Hash': CanonHelpers.uint8ListToBase64(hash),
     'Meta': meta,
     'To': to,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(hash, 'hash');
     Validators.validateHash32(hash, 'hash');
+    Validators.validateRequired(meta, 'meta');
+    Validators.validateRequired(to, 'to');
   }
 }
+
 
 /// Protocol type: TransferCredits
 final class TransferCredits {
@@ -532,18 +574,19 @@ final class TransferCredits {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'To': to,
-    };
+    final map = <String, dynamic>{    'To': to,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(to, 'to');
   }
 }
+
 
 /// Protocol type: UpdateAccountAuth
 final class UpdateAccountAuth {
@@ -558,18 +601,19 @@ final class UpdateAccountAuth {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Operations': operations,
-    };
+    final map = <String, dynamic>{    'Operations': operations,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(operations, 'operations');
   }
 }
+
 
 /// Protocol type: UpdateKey
 final class UpdateKey {
@@ -584,18 +628,20 @@ final class UpdateKey {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'NewKeyHash': CanonHelpers.uint8ListToBase64(newKeyHash),
-    };
+    final map = <String, dynamic>{    'NewKeyHash': CanonHelpers.uint8ListToBase64(newKeyHash),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(newKeyHash, 'newKeyHash');
+    Validators.validateHash32(newKeyHash, 'newKeyHash');
   }
 }
+
 
 /// Protocol type: UpdateKeyPage
 final class UpdateKeyPage {
@@ -610,18 +656,19 @@ final class UpdateKeyPage {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Operation': operation,
-    };
+    final map = <String, dynamic>{    'Operation': operation,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(operation, 'operation');
   }
 }
+
 
 /// Protocol type: WriteData
 final class WriteData {
@@ -640,20 +687,21 @@ final class WriteData {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Entry': entry,
+    final map = <String, dynamic>{    'Entry': entry,
     'Scratch': scratch,
     'WriteToState': writeToState,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
 /// Protocol type: WriteDataTo
 final class WriteDataTo {
@@ -670,17 +718,20 @@ final class WriteDataTo {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Recipient': recipient,
     'Entry': entry,
-    'Recipient': recipient,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(recipient, 'recipient');
     Validators.validateUrl(recipient, 'recipient');
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
