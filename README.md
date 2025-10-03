@@ -1,51 +1,123 @@
-# OpenDLT Accumulate Dart SDK (V2 + V3)
+# OpenDLT Accumulate Dart SDK
 
-**Status:** scaffolding complete. Generated core files are left intact; this layer adds a clean, idiomatic API.
+[![Dart](https://img.shields.io/badge/Dart-3.0+-blue.svg)](https://dart.dev)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Install (local path)
+Dart SDK for the Accumulate blockchain protocol. Supports both V2 and V3 API endpoints with a unified interface.
+
+## Installation
+
+Add to your `pubspec.yaml`:
 
 ```yaml
-# pubspec.yaml (consumer)
 dependencies:
   opendlt_accumulate:
-    path: ../opendlt-dart-v2v3-sdk/unified
+    path: ../opendlt-dart-v2v3-sdk/UNIFIED  # Local development
+    # git: https://github.com/your-org/opendlt-dart-v2v3-sdk.git  # When published
 ```
 
-## Quickstart
+## Quick Start
 
 ```dart
-import "package:opendlt_accumulate/opendlt_accumulate.dart";
+import 'package:opendlt_accumulate/opendlt_accumulate.dart';
 
 void main() async {
-  final acc = Accumulate.network(NetworkEndpoint.mainnet);
+  // Connect to network
+  final acc = Accumulate.network(NetworkEndpoint.testnet);
 
-  final res = await acc.query({
+  // Query account (V3 by default)
+  final account = await acc.query({
     "type": "query-account",
     "url": "acc://accumulatenetwork.acme",
   });
 
-  print(res);
+  print('Account: ${account}');
   acc.close();
 }
 ```
 
-## API Design
+## Examples
 
-- **Unified facade**: `Accumulate` exposes `.v2` and `.v3`
-- **Defaults**: `submit()` and `query()` point to V3
-- **Legacy**: `v2.executeDirect()` is available when needed
-- **Escape hatches**: `rawCall()` on both versions
+See [`example/`](example/) for complete usage examples:
 
-## Endpoints
+- **Basic Operations**: Account queries, transaction submission
+- **Identity Management**: Creating ADIs, lite accounts
+- **Token Operations**: Sending tokens, managing credits
+- **DevNet Setup**: Local development environment
+- **Zero-to-Hero**: Complete workflow from setup to transactions
 
-- **Mainnet**: https://mainnet.accumulatenetwork.io
-- **Testnet**: https://testnet.accumulatenetwork.io
-- **Devnet**: http://localhost:26660 (adjust as needed)
+Run any example:
+```bash
+dart run example/flows/999_zero_to_hero_simple.dart
+```
 
-## Generated Files (do not edit)
+## API Overview
 
-- `lib/accumulate_client.dart`
-- `lib/types.dart`
-- `lib/src/json_rpc_client.dart`
+### Unified Interface
+```dart
+final acc = Accumulate.network(NetworkEndpoint.mainnet);
 
-These are produced by the Accumulate gen-sdk tool. This package only layers additional organization on top.
+// V3 API (default)
+await acc.query(queryData);
+await acc.submit(transaction);
+
+// V2 API (legacy support)
+await acc.v2.executeDirect(txData);
+
+// Raw access
+await acc.v3.rawCall("query", params);
+```
+
+### Network Endpoints
+- **Mainnet**: `NetworkEndpoint.mainnet`
+- **Testnet**: `NetworkEndpoint.testnet`
+- **DevNet**: `NetworkEndpoint.devnet` (localhost:26660)
+- **Custom**: `NetworkEndpoint.custom("https://your-node.com")`
+
+## Project Structure
+
+```
+lib/
+├── src/generated/       # Generated code (DO NOT EDIT)
+│   ├── api/            # API clients
+│   ├── types/          # Protocol types
+│   └── runtime/        # Validation & helpers
+├── src/                # Hand-written SDK code
+│   ├── api/           # High-level API wrappers
+│   ├── codec/         # Encoding/decoding
+│   ├── signatures/    # Cryptographic signatures
+│   └── transactions/  # Transaction builders
+example/                # Usage examples
+test/                   # Test suite (organized by function)
+tool/                   # Build and development tools
+```
+
+## Development
+
+### Running Tests
+```bash
+# All tests
+dart test
+
+# Specific categories
+dart test test/unit/
+dart test test/conformance/
+dart test test/integration/
+```
+
+### Code Generation
+Generated files are produced by the Accumulate gen-sdk tool from the GitLab Go repository. See [`lib/src/generated/README.md`](lib/src/generated/README.md) for regeneration instructions.
+
+### Build Tools
+See [`tool/README.md`](tool/README.md) for available development tools and scripts.
+
+## Contributing
+
+1. Follow existing code patterns and structure
+2. Add tests for new functionality in appropriate test categories
+3. Run `dart analyze` and fix any issues
+4. Update documentation as needed
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
