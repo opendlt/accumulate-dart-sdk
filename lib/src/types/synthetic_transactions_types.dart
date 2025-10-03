@@ -1,6 +1,7 @@
 // GENERATED — Do not edit.
 // Protocol types from synthetic_transactions.yml
 
+import '../runtime/canon_helpers.dart';
 import '../runtime/validators.dart';
 
 /// Protocol type: SyntheticBurnTokens
@@ -18,19 +19,21 @@ final class SyntheticBurnTokens {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount.toString(),
+    final map = <String, dynamic>{    'Amount': CanonHelpers.bigIntToJson(amount),
     'IsRefund': isRefund,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
   }
 }
+
 
 /// Protocol type: SyntheticCreateIdentity
 final class SyntheticCreateIdentity {
@@ -45,18 +48,19 @@ final class SyntheticCreateIdentity {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Accounts': accounts,
-    };
+    final map = <String, dynamic>{    'Accounts': accounts,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(accounts, 'accounts');
   }
 }
+
 
 /// Protocol type: SyntheticDepositCredits
 final class SyntheticDepositCredits {
@@ -75,26 +79,28 @@ final class SyntheticDepositCredits {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AcmeRefundAmount': acmeRefundAmount.toString(),
-    'Amount': amount,
+    final map = <String, dynamic>{    'Amount': amount,
+    'AcmeRefundAmount': CanonHelpers.bigIntToJson(acmeRefundAmount),
     'IsRefund': isRefund,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(acmeRefundAmount, 'acmeRefundAmount');
     Validators.validateBigInt(acmeRefundAmount, 'acmeRefundAmount');
   }
 }
+
 
 /// Protocol type: SyntheticDepositTokens
 final class SyntheticDepositTokens {
   final String token;
   final BigInt amount;
-  final bool isIssuer;
+  final dynamic isIssuer;
   final bool isRefund;
 
   const SyntheticDepositTokens({required this.token, required this.amount, required this.isIssuer, required this.isRefund});
@@ -104,27 +110,31 @@ final class SyntheticDepositTokens {
     return SyntheticDepositTokens(
     token: json['Token'] as String,
     amount: BigInt.parse(json['Amount'] as String),
-    isIssuer: json['IsIssuer'] as bool,
+    isIssuer: json['IsIssuer'] as dynamic,
     isRefund: json['IsRefund'] as bool,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Amount': amount.toString(),
+    final map = <String, dynamic>{    'Token': token,
+    'Amount': CanonHelpers.bigIntToJson(amount),
     'IsIssuer': isIssuer,
     'IsRefund': isRefund,
-    'Token': token,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(token, 'token');
     Validators.validateUrl(token, 'token');
+    Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
+    Validators.validateRequired(isIssuer, 'isIssuer');
   }
 }
+
 
 /// Protocol type: SyntheticForwardTransaction
 final class SyntheticForwardTransaction {
@@ -141,23 +151,25 @@ final class SyntheticForwardTransaction {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Signatures': signatures,
+    final map = <String, dynamic>{    'Signatures': signatures,
     'Transaction': transaction,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(signatures, 'signatures');
+    Validators.validateRequired(transaction, 'transaction');
   }
 }
 
+
 /// Protocol type: SyntheticOrigin
 final class SyntheticOrigin {
-  final String cause;
+  final dynamic cause;
   final String source;
   final String initiator;
   final int feeRefund;
@@ -168,7 +180,7 @@ final class SyntheticOrigin {
   /// Create from JSON map
   factory SyntheticOrigin.fromJson(Map<String, dynamic> json) {
     return SyntheticOrigin(
-    cause: json['Cause'] as String,
+    cause: json['Cause'] as dynamic,
     source: json['Source'] as String,
     initiator: json['Initiator'] as String,
     feeRefund: json['FeeRefund'] as int,
@@ -176,23 +188,27 @@ final class SyntheticOrigin {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Cause': cause,
+    final map = <String, dynamic>{    'Cause': cause,
+    'Source': source,
+    'Initiator': initiator,
     'FeeRefund': feeRefund,
     'Index': index,
-    'Initiator': initiator,
-    'Source': source,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(cause, 'cause');
+    Validators.validateRequired(source, 'source');
     Validators.validateUrl(source, 'source');
+    Validators.validateRequired(initiator, 'initiator');
     Validators.validateUrl(initiator, 'initiator');
   }
 }
+
 
 /// Protocol type: SyntheticWriteData
 final class SyntheticWriteData {
@@ -207,16 +223,17 @@ final class SyntheticWriteData {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Entry': entry,
-    };
+    final map = <String, dynamic>{    'Entry': entry,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
