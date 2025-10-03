@@ -11,7 +11,9 @@ void main() {
     setUpAll(() async {
       // Use default DevNet configuration
       devnetConfig = {
-        'ACC_DEVNET_DIR': r'C:\Accumulate_Stuff\devnet-accumulate-instance',
+        'ACC_DEVNET_DIR': Platform.isWindows
+          ? r'C:\devnet-accumulate-instance'
+          : '/tmp/devnet-accumulate-instance',
         'ACC_RPC_URL_V2': 'http://localhost:26660/v2',
         'ACC_RPC_URL_V3': 'http://localhost:26660/v3',
         'ACC_FAUCET_ACCOUNT': 'acc://a21555da824d14f3f066214657a44e6a1a347dad3052a23a/ACME',

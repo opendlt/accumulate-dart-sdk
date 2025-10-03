@@ -4,16 +4,25 @@ import 'package:http/http.dart' as http;
 
 // Import generated client from quarantined area (not public API)
 // Note: This is only for testing/validation, not for public use
-String get generatedClientPath =>
-    r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\dart_client.dart';
+String get testOutputDir {
+  final envPath = Platform.environment['SDK_TEST_OUTPUT'];
+  if (envPath != null) return envPath;
+
+  // Default to platform-appropriate temp directory
+  if (Platform.isWindows) {
+    return r'C:\temp\opendlt-dart-sdk-test-output';
+  } else {
+    return '/tmp/opendlt-dart-sdk-test-output';
+  }
+}
 
 void main() {
   group('Quarantined Generated Client Tests', () {
     test('Generated client files exist in test output', () {
-      final clientFile = File(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\dart_client.dart');
-      final jsonRpcFile = File(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\dart_json_rpc_client.dart');
-      final typesFile = File(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\dart_types.dart');
-      final pubspecFile = File(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\pubspec.yaml');
+      final clientFile = File('$testOutputDir/lib/dart_client.dart');
+      final jsonRpcFile = File('$testOutputDir/lib/dart_json_rpc_client.dart');
+      final typesFile = File('$testOutputDir/lib/dart_types.dart');
+      final pubspecFile = File('$testOutputDir/lib/pubspec.yaml');
 
       expect(clientFile.existsSync(), isTrue, reason: 'dart_client.dart should exist in test_output');
       expect(jsonRpcFile.existsSync(), isTrue, reason: 'dart_json_rpc_client.dart should exist in test_output');
@@ -25,7 +34,7 @@ void main() {
 
     test('Generated files are properly isolated from public lib', () {
       // Verify no generated files exist in public lib
-      final publicLibDir = Directory(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\unified\lib');
+      final publicLibDir = Directory('lib');
       final files = publicLibDir.listSync(recursive: true)
           .where((f) => f is File && f.path.endsWith('.dart'))
           .map((f) => f.path);
@@ -46,7 +55,7 @@ void main() {
     });
 
     test('Generated client structure is valid', () {
-      final clientContent = File(generatedClientPath).readAsStringSync();
+      final clientContent = File('$testOutputDir/lib/dart_client.dart').readAsStringSync();
 
       // Verify it has expected structure
       expect(clientContent, contains('class AccumulateClient'));
@@ -66,9 +75,9 @@ void main() {
       // This test verifies that our external template system is working
       // by checking that the generated files contain expected patterns
 
-      final jsonRpcContent = File(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\dart_json_rpc_client.dart')
+      final jsonRpcContent = File('$testOutputDir/lib/dart_json_rpc_client.dart')
           .readAsStringSync();
-      final typesContent = File(r'C:\Accumulate_Stuff\opendlt-dart-v2v3-sdk\test_output\lib\dart_types.dart')
+      final typesContent = File('$testOutputDir/lib/dart_types.dart')
           .readAsStringSync();
 
       // Verify JSON-RPC client structure
