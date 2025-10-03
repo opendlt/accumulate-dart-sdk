@@ -2,6 +2,7 @@
 // Protocol types from accounts.yml
 
 import '../enums.dart';
+import '../runtime/canon_helpers.dart';
 import '../runtime/validators.dart';
 
 /// Protocol type: ADI
@@ -19,19 +20,22 @@ final class ADI {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'AccountAuth': auth,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(auth, 'auth');
   }
 }
+
 
 /// Protocol type: DataAccount
 final class DataAccount {
@@ -50,20 +54,24 @@ final class DataAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'AccountAuth': auth,
     'Entry': entry,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(auth, 'auth');
+    Validators.validateRequired(entry, 'entry');
   }
 }
+
 
 /// Protocol type: KeyBook
 final class KeyBook {
@@ -84,21 +92,25 @@ final class KeyBook {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AccountAuth': auth,
+    final map = <String, dynamic>{    'Url': url,
     'BookType': bookType,
+    'AccountAuth': auth,
     'PageCount': pageCount,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(bookType, 'bookType');
+    Validators.validateRequired(auth, 'auth');
   }
 }
+
 
 /// Protocol type: KeyPage
 final class KeyPage {
@@ -131,28 +143,33 @@ final class KeyPage {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AcceptThreshold': acceptThreshold,
-    'BlockThreshold': blockThreshold,
+    final map = <String, dynamic>{    'KeyBook': keyBook,
+    'Url': url,
     'CreditBalance': creditBalance,
-    'KeyBook': keyBook,
-    'Keys': keys,
+    'AcceptThreshold': acceptThreshold,
     'RejectThreshold': rejectThreshold,
     'ResponseThreshold': responseThreshold,
-    'TransactionBlacklist': transactionBlacklist,
-    'Url': url,
+    'BlockThreshold': blockThreshold,
     'Version': version,
-    };
+    'Keys': keys,
+    'TransactionBlacklist': transactionBlacklist,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(keyBook, 'keyBook');
     Validators.validateUrl(keyBook, 'keyBook');
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(keys, 'keys');
+    Validators.validateRequired(transactionBlacklist, 'transactionBlacklist');
   }
 }
+
 
 /// Protocol type: LiteDataAccount
 final class LiteDataAccount {
@@ -167,18 +184,20 @@ final class LiteDataAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Url': url,
-    };
+    final map = <String, dynamic>{    'Url': url,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
 /// Protocol type: LiteIdentity
 final class LiteIdentity {
@@ -197,20 +216,22 @@ final class LiteIdentity {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'CreditBalance': creditBalance,
     'LastUsedOn': lastUsedOn,
-    'Url': url,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
 /// Protocol type: LiteTokenAccount
 final class LiteTokenAccount {
@@ -231,23 +252,27 @@ final class LiteTokenAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Balance': balance.toString(),
-    'LockHeight': lockHeight,
+    final map = <String, dynamic>{    'Url': url,
     'TokenUrl': tokenUrl,
-    'Url': url,
-    };
+    'Balance': CanonHelpers.bigIntToJson(balance),
+    'LockHeight': lockHeight,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(tokenUrl, 'tokenUrl');
     Validators.validateUrl(tokenUrl, 'tokenUrl');
+    Validators.validateRequired(balance, 'balance');
     Validators.validateBigInt(balance, 'balance');
   }
 }
+
 
 /// Protocol type: TokenAccount
 final class TokenAccount {
@@ -268,23 +293,28 @@ final class TokenAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'AccountAuth': auth,
-    'Balance': balance.toString(),
     'TokenUrl': tokenUrl,
-    'Url': url,
-    };
+    'Balance': CanonHelpers.bigIntToJson(balance),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(auth, 'auth');
+    Validators.validateRequired(tokenUrl, 'tokenUrl');
     Validators.validateUrl(tokenUrl, 'tokenUrl');
+    Validators.validateRequired(balance, 'balance');
     Validators.validateBigInt(balance, 'balance');
   }
 }
+
 
 /// Protocol type: TokenIssuer
 final class TokenIssuer {
@@ -311,27 +341,34 @@ final class TokenIssuer {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Url': url,
     'AccountAuth': auth,
-    'Issued': issued.toString(),
+    'Symbol': symbol,
     'Precision': precision,
     'Properties': properties,
-    'SupplyLimit': supplyLimit.toString(),
-    'Symbol': symbol,
-    'Url': url,
-    };
+    'Issued': CanonHelpers.bigIntToJson(issued),
+    'SupplyLimit': CanonHelpers.bigIntToJson(supplyLimit),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
+    Validators.validateRequired(auth, 'auth');
+    Validators.validateRequired(symbol, 'symbol');
+    Validators.validateRequired(properties, 'properties');
     Validators.validateUrl(properties, 'properties');
+    Validators.validateRequired(issued, 'issued');
     Validators.validateBigInt(issued, 'issued');
+    Validators.validateRequired(supplyLimit, 'supplyLimit');
     Validators.validateBigInt(supplyLimit, 'supplyLimit');
   }
 }
+
 
 /// Protocol type: UnknownAccount
 final class UnknownAccount {
@@ -346,18 +383,20 @@ final class UnknownAccount {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Url': url,
-    };
+    final map = <String, dynamic>{    'Url': url,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
 /// Protocol type: UnknownSigner
 final class UnknownSigner {
@@ -374,17 +413,19 @@ final class UnknownSigner {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Url': url,
+    final map = <String, dynamic>{    'Url': url,
     'Version': version,
-    };
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(url, 'url');
     Validators.validateUrl(url, 'url');
   }
 }
+
 
