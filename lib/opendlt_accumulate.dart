@@ -1,9 +1,16 @@
 library opendlt_accumulate;
 
-/// Public entrypoint for the Accumulate Dart SDK (V2 + V3).
-/// This file only exports our *handwritten* layers. Generated files remain internal.
-export 'src/facade/accumulate.dart'
-    show Accumulate, AccumulateOptions, NetworkEndpoint;
-export 'src/v2/client_v2.dart' show AccumulateV2;
-export 'src/v3/client_v3.dart' show AccumulateV3;
-export 'src/client_wrapper.dart' show ClientWrapper;
+// Runtime utilities
+export 'src/runtime/canonical_json.dart';
+export 'src/runtime/bytes.dart';
+export 'src/runtime/url.dart';
+export 'src/runtime/validate.dart';
+
+// Enums (from Stage 1)
+export 'src/enums.dart';
+
+// Core types
+export 'src/core/endpoints.dart';
+
+// Signatures
+export 'src/signatures/signatures.dart';
