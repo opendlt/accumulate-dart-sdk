@@ -1,8 +1,5 @@
-import 'dart:convert';
 import 'dart:typed_data';
-import 'bytes.dart';
-import 'url.dart';
-import 'enums.dart';
+import 'runtime/bytes.dart';
 
 final class TransactionHeader {
   const TransactionHeader({
@@ -44,7 +41,6 @@ sealed class TransactionBody {
   Map<String, dynamic> toJson();
 
   static TransactionBody? fromJson(Map<String, dynamic> json) {
-    final type = json['type'] as String?;
     // Add transaction body type dispatch here
     return null;
   }
