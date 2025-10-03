@@ -18,18 +18,19 @@ final class ExpireOptions {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AtTime': atTime.millisecondsSinceEpoch,
-    };
+    final map = <String, dynamic>{    'AtTime': atTime.millisecondsSinceEpoch,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(atTime, 'atTime');
   }
 }
+
 
 /// Protocol type: HoldUntilOptions
 final class HoldUntilOptions {
@@ -44,22 +45,23 @@ final class HoldUntilOptions {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'MinorBlock': minorBlock,
-    };
+    final map = <String, dynamic>{    'MinorBlock': minorBlock,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    // No validation required
   }
 }
 
+
 /// Protocol type: Transaction
 final class Transaction {
-  final TransactionHeader header;
+  final dynamic header;
   final dynamic body;
   final Uint8List hash;
   final bool header64bytes;
@@ -70,7 +72,7 @@ final class Transaction {
   /// Create from JSON map
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-    header: json['Header'] as TransactionHeader,
+    header: json['Header'] as dynamic,
     body: json['Body'] as dynamic,
     hash: CanonHelpers.base64ToUint8List(json['hash'] as String),
     header64bytes: json['header64bytes'] as bool,
@@ -78,22 +80,26 @@ final class Transaction {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{    'Header': header,
     'Body': body,
-    'Header': header,
-    'body64bytes': body64bytes,
     'hash': CanonHelpers.uint8ListToBase64(hash),
     'header64bytes': header64bytes,
-    };
+    'body64bytes': body64bytes,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
-
+    Validators.validateRequired(header, 'header');
+    Validators.validateRequired(body, 'body');
+    Validators.validateRequired(hash, 'hash');
+    Validators.validateHash32(hash, 'hash');
   }
 }
+
 
 /// Protocol type: TransactionHeader
 final class TransactionHeader {
@@ -101,8 +107,8 @@ final class TransactionHeader {
   final Uint8List initiator;
   final String memo;
   final Uint8List metadata;
-  final ExpireOptions expire;
-  final HoldUntilOptions holdUntil;
+  final dynamic expire;
+  final dynamic holdUntil;
   final String authorities;
 
   const TransactionHeader({required this.principal, required this.initiator, required this.memo, required this.metadata, required this.expire, required this.holdUntil, required this.authorities});
@@ -114,36 +120,44 @@ final class TransactionHeader {
     initiator: CanonHelpers.base64ToUint8List(json['Initiator'] as String),
     memo: json['Memo'] as String,
     metadata: CanonHelpers.base64ToUint8List(json['Metadata'] as String),
-    expire: json['Expire'] as ExpireOptions,
-    holdUntil: json['HoldUntil'] as HoldUntilOptions,
+    expire: json['Expire'] as dynamic,
+    holdUntil: json['HoldUntil'] as dynamic,
     authorities: json['Authorities'] as String,
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'Authorities': authorities,
-    'Expire': expire,
-    'HoldUntil': holdUntil,
+    final map = <String, dynamic>{    'Principal': principal,
     'Initiator': CanonHelpers.uint8ListToBase64(initiator),
     'Memo': memo,
     'Metadata': CanonHelpers.uint8ListToBase64(metadata),
-    'Principal': principal,
-    };
+    'Expire': expire,
+    'HoldUntil': holdUntil,
+    'Authorities': authorities,
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(principal, 'principal');
     Validators.validateUrl(principal, 'principal');
+    Validators.validateRequired(initiator, 'initiator');
     Validators.validateHash32(initiator, 'initiator');
+    Validators.validateRequired(memo, 'memo');
+    Validators.validateRequired(metadata, 'metadata');
+    Validators.validateRequired(expire, 'expire');
+    Validators.validateRequired(holdUntil, 'holdUntil');
+    Validators.validateRequired(authorities, 'authorities');
     Validators.validateUrl(authorities, 'authorities');
   }
 }
 
+
 /// Protocol type: TransactionStatus
 final class TransactionStatus {
-  final String txID;
+  final dynamic txID;
   final dynamic code;
   final bool remote;
   final bool delivered;
@@ -167,7 +181,7 @@ final class TransactionStatus {
   /// Create from JSON map
   factory TransactionStatus.fromJson(Map<String, dynamic> json) {
     return TransactionStatus(
-    txID: json['TxID'] as String,
+    txID: json['TxID'] as dynamic,
     code: json['Code'] as dynamic,
     remote: json['Remote'] as bool,
     delivered: json['Delivered'] as bool,
@@ -188,35 +202,46 @@ final class TransactionStatus {
     );
   }
 
-  /// Convert to JSON map
+  /// Convert to canonical JSON map with sorted keys
   Map<String, dynamic> toJson() {
-    return {
-    'AnchorSigners': CanonHelpers.uint8ListToBase64(anchorSigners),
+    final map = <String, dynamic>{    'TxID': txID,
     'Code': code,
-    'CodeNum': codeNum,
-    'Delivered': delivered,
-    'DestinationNetwork': destinationNetwork,
-    'Error': error,
-    'Failed': failed,
-    'GotDirectoryReceipt': gotDirectoryReceipt,
-    'Initiator': initiator,
-    'Pending': pending,
-    'Proof': proof,
-    'Received': received,
     'Remote': remote,
+    'Delivered': delivered,
+    'Pending': pending,
+    'Failed': failed,
+    'CodeNum': codeNum,
+    'Error': error,
     'Result': result,
-    'SequenceNumber': sequenceNumber,
+    'Received': received,
+    'Initiator': initiator,
     'Signers': signers,
     'SourceNetwork': sourceNetwork,
-    'TxID': txID,
-    };
+    'DestinationNetwork': destinationNetwork,
+    'SequenceNumber': sequenceNumber,
+    'GotDirectoryReceipt': gotDirectoryReceipt,
+    'Proof': proof,
+    'AnchorSigners': CanonHelpers.uint8ListToBase64(anchorSigners),
+    }; 
+    return CanonicalJson.sortMap(map);
   }
 
   /// Validate the object
   void validate() {
+    Validators.validateRequired(txID, 'txID');
+    Validators.validateRequired(code, 'code');
+    Validators.validateRequired(error, 'error');
+    Validators.validateRequired(result, 'result');
+    Validators.validateRequired(initiator, 'initiator');
     Validators.validateUrl(initiator, 'initiator');
+    Validators.validateRequired(signers, 'signers');
+    Validators.validateRequired(sourceNetwork, 'sourceNetwork');
     Validators.validateUrl(sourceNetwork, 'sourceNetwork');
+    Validators.validateRequired(destinationNetwork, 'destinationNetwork');
     Validators.validateUrl(destinationNetwork, 'destinationNetwork');
+    Validators.validateRequired(proof, 'proof');
+    Validators.validateRequired(anchorSigners, 'anchorSigners');
   }
 }
+
 
