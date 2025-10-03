@@ -4,6 +4,8 @@ import "../v2/client_v2.dart";
 import "../v3/client_v3.dart";
 
 export "../core/options.dart";
+export "../v2/client_v2.dart";
+export "../v3/client_v3.dart";
 export "../core/endpoints.dart";
 
 /// High-level Accumulate facade exposing both V2 and V3.
