@@ -5,7 +5,6 @@ export 'src/facade/accumulate.dart' show Accumulate, AccumulateV2, AccumulateV3;
 export 'src/core/options.dart' show AccumulateOptions;
 
 // Runtime utilities
-export 'src/runtime/canonical_json.dart';
 export 'src/runtime/bytes.dart';
 export 'src/runtime/url.dart';
 export 'src/runtime/validate.dart';
