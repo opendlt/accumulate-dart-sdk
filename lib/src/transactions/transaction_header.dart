@@ -1,86 +1,58 @@
-/// TransactionHeader implementation
-library;
-
-import 'dart:convert';
 import 'dart:typed_data';
-import '../runtime/canonical_json.dart';
+import '../runtime/validate.dart';
 import '../runtime/bytes.dart';
-import '../runtime/url.dart';
-import '../enums.dart';
 
-/// Transaction header with all metadata fields
-final class TransactionHeader {
+class TransactionHeader {
+  final String Principal;
+  final dynamic Initiator;
+  final String? Memo;
+  final Uint8List? Metadata;
+  final dynamic? Expire;
+  final dynamic? HoldUntil;
+  final String? Authorities;
+
   const TransactionHeader({
-    required this.principal,
-    required this.initiator,
-    this.memo,
-    this.metadata,
-    this.expire,
-    this.holdUntil,
-    this.authorities,
+    required this.Principal,
+    required this.Initiator,
+    this.Memo,
+    this.Metadata,
+    this.Expire,
+    this.HoldUntil,
+    this.Authorities,
+  
   });
 
-  final String principal;
-  final Uint8List initiator;
-  final String? memo;
-  final Uint8List? metadata;
-  final ExpireOptions? expire;
-  final HoldUntilOptions? holdUntil;
-  final String? authorities;
+  Map<String, dynamic> toJson() => {
+    'Principal': Principal,
+    'Initiator': Initiator,
+    if (Memo != null) 'Memo': Memo,
+    if (Metadata != null) 'Metadata': Metadata,
+    if (Expire != null) 'Expire': Expire,
+    if (HoldUntil != null) 'HoldUntil': HoldUntil,
+    if (Authorities != null) 'Authorities': Authorities,
+  };
 
-  /// Convert to JSON representation
-  Map<String, dynamic> toJson() {
-    final json = <String, dynamic>{};
-    json['Principal'] = principal;
-    json['Initiator'] = ByteUtils.bytesToJson(initiator);
-    if (memo != null) {
-      json['Memo'] = memo;
-    }
-    if (metadata != null) {
-      json['Metadata'] = ByteUtils.bytesToJson(metadata!);
-    }
-    if (expire != null) {
-      json['Expire'] = expire;
-    }
-    if (holdUntil != null) {
-      json['HoldUntil'] = holdUntil;
-    }
-    if (authorities != null) {
-      json['Authorities'] = authorities;
-    }
-    return json;
+  static TransactionHeader fromJson(Map<String, dynamic> j) {
+    return TransactionHeader(
+      Principal: j['Principal'] as String,
+      Initiator: j['Initiator'] as dynamic,
+      Memo: j['Memo'] as String?,
+      Metadata: j['Metadata'] != null ? ByteUtils.bytesFromJson(j['Metadata'] as String) : null,
+      Expire: j['Expire'] as dynamic?,
+      HoldUntil: j['HoldUntil'] as dynamic?,
+      Authorities: j['Authorities'] as String?,
+    );
   }
 
-  /// Parse from JSON
-  static TransactionHeader? fromJson(Map<String, dynamic> json) {
-    try {
-      final principal = json['Principal'] as String;
-      final initiator = ByteUtils.bytesFromJson(json['Initiator'] as String);
-      final memo = json['Memo'] as String?;
-      final metadata = json['Metadata'] != null ? ByteUtils.bytesFromJson(json['Metadata'] as String) : null;
-      final expire = json['Expire'];
-      final holdUntil = json['HoldUntil'];
-      final authorities = json['Authorities'] as String?;
-
-      return TransactionHeader(
-        principal: principal,
-        initiator: initiator,
-        memo: memo,
-        metadata: metadata,
-        expire: expire,
-        holdUntil: holdUntil,
-        authorities: authorities,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Validate header fields
   bool validate() {
-    if (!AccumulateUrl.isValid(principal)) return false;
-    if (!ByteUtils.validateHash(initiator)) return false;
-    if (authorities != null && !AccumulateUrl.isValid(authorities)) return false;
-    return true;
+    try {
+      Validate.required(Principal, 'Principal');
+      if (!Principal.startsWith('acc://')) return false;
+      Validate.required(Initiator, 'Initiator');
+      if (Authorities != null && !Authorities!.startsWith('acc://')) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
