@@ -7,7 +7,7 @@ import "dart:async";
 import "dart:convert";
 import "dart:io";
 import "package:http/http.dart" as http;
-import "../json_rpc_client.dart" as gen; // keep generated internal
+import "../generated/api/json_rpc_client.dart" as gen; // keep generated internal
 import "options.dart";
 
 /// Hardened transport wrapper over generated JsonRpcClient.

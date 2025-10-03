@@ -1,7 +1,7 @@
 // Client wrapper that works around generated client issues
 
 import 'package:http/http.dart' as http;
-import 'json_rpc_client.dart';
+import 'generated/api/json_rpc_client.dart';
 
 /// Simplified client wrapper that works around generated client compilation issues
 class ClientWrapper {
