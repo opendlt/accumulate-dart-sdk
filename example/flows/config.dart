@@ -16,7 +16,9 @@ class FlowConfig {
     var v3Url = Platform.environment["ACC_RPC_URL_V3"];
     var faucet = Platform.environment["ACC_FAUCET_ACCOUNT"];
     var devnetDir = Platform.environment["ACC_DEVNET_DIR"] ??
-        r'C:\Accumulate_Stuff\devnet-accumulate-instance';
+        (Platform.isWindows
+          ? r'C:\devnet-accumulate-instance'
+          : '/tmp/devnet-accumulate-instance');
 
     // If any are missing, run discovery
     if (v2Url == null || v3Url == null || faucet == null) {

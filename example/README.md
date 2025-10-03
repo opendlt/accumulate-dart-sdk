@@ -1,114 +1,116 @@
 # Examples
 
-This directory contains runnable examples demonstrating the Accumulate Dart SDK functionality.
+Complete usage examples for the Accumulate Dart SDK. All examples are runnable and demonstrate real-world integration patterns.
+
+## Available Examples
+
+### Setup & Key Management
+- `000_boot_devnet_local.dart` - Start local DevNet for development
+- `100_keygen_lite_urls.dart` - Generate Ed25519 keys and derive Lite accounts
+- `110_testnet_faucet.dart` - Request testnet tokens via faucet
+- `120_faucet_local_devnet.dart` - Request tokens from local DevNet
+
+### Identity Management
+- `200_create_identity_v3.dart` - Create Accumulate Digital Identifier (ADI)
+- `210_buy_credits_lite.dart` - Purchase credits for Lite accounts
+- `220_create_adi_v3.dart` - Advanced ADI creation with authorities
+
+### Token Operations
+- `230_send_tokens_v3.dart` - Send tokens between accounts
+- `240_buy_credits_keypage.dart` - Purchase credits for ADI key pages
+- `250_create_token_account.dart` - Create custom token accounts
+- `280_send_tokens_lta_to_adi.dart` - Transfer from Lite to ADI accounts
+
+### Data Management
+- `260_create_data_account.dart` - Create data storage accounts
+- `270_write_data.dart` - Write data to accounts
+
+### Complete Workflows
+- `999_zero_to_hero.dart` - Full workflow: keys → identity → tokens → data
+- `999_zero_to_hero_simple.dart` - Simplified version with DevNet discovery
 
 ## Quick Start
 
-### Environment Setup
+### 1. Environment Setup
 ```bash
-# Select network (optional, defaults to testnet)
-$env:ACC_NET = "testnet"   # Options: mainnet, devnet, testnet
+# Optional: Set target network (defaults to testnet)
+export ACC_NET=testnet  # Options: mainnet, testnet, devnet
 ```
 
-### Key Generation & Lite URLs
+### 2. Generate Keys
 ```bash
-# Generate Ed25519 keys and derive Lite Identity/Token Account URLs
 dart run example/flows/100_keygen_lite_urls.dart
 ```
+Output:
+```json
+{
+  "privateKeyHex": "1234567890abcdef...",
+  "publicKeyHex": "abcdef1234567890...",
+  "liteIdentity": "acc://a1b2c3d4e5f6.../",
+  "liteTokenAccount": "acc://a1b2c3d4e5f6.../ACME"
+}
+```
 
-### Testnet Faucet
+### 3. Get Testnet Tokens
 ```bash
-# First generate or set your Lite Token Account URL
-$env:ACC_LTA_URL = "acc://<your-lite-hash>/ACME"
+# Use LTA from step 2
+export ACC_LTA_URL="acc://your-lite-hash/ACME"
 dart run example/flows/110_testnet_faucet.dart
 ```
 
-### Transaction Examples
+### 4. Create Identity & Send Tokens
 ```bash
-# Create ADI (Accumulate Digital Identifier)
-dart run example/flows/200_create_identity_v3.dart
-
-# Send tokens between accounts
-$env:ACC_FROM_URL = "acc://sender.acme/tokens"
-$env:ACC_TO_URL = "acc://receiver.acme/tokens"
-$env:ACC_AMOUNT = "1000"
-dart run example/flows/230_send_tokens_v3.dart
-
-# Create and write to data account
-dart run example/flows/240_create_data_account_v3.dart
-dart run example/flows/250_write_data_v3.dart
+dart run example/flows/999_zero_to_hero_simple.dart
 ```
 
 ## CLI Tool
 
-The SDK includes a command-line tool for common operations:
+The SDK includes a command-line interface:
 
 ```bash
-# Generate keys and addresses
+# Generate keys
 dart run bin/accumulate.dart keygen
 
-# Query account information
+# Query accounts
 dart run bin/accumulate.dart query acc://accumulatenetwork.acme
 
-# Submit pre-built transaction envelope
-dart run bin/accumulate.dart submit example/tx/envelope.json
+# Submit transactions
+dart run bin/accumulate.dart submit transaction.json
 ```
 
-## Example Outputs
+## Environment Variables
 
-### Key Generation
-```json
-{
-  "publicKeyHex": "b781235c8f3995f07d81724d2b25976448f0f9f770fc4a5d82e04e0983e63699",
-  "lid": "acc://2c27fb67db121b5d2043e68d664b1624d470d891b1f68736",
-  "lta": "acc://2c27fb67db121b5d2043e68d664b1624d470d891b1f68736/ACME"
-}
-```
+Examples support these optional environment variables:
 
-### Transaction Submission
-```json
-{
-  "envelope": {
-    "signatures": [{
-      "type": "ed25519",
-      "publicKey": "b781235c8f3995f07d81724d2b25976448f0f9f770fc4a5d82e04e0983e63699",
-      "signature": "base64-encoded-signature",
-      "timestamp": 1234567890123
-    }],
-    "transaction": {
-      "header": {
-        "principal": "acc://sender.acme/tokens",
-        "timestamp": 1234567890123
-      },
-      "body": {
-        "type": "send-tokens",
-        "to": [{"url": "acc://receiver.acme/tokens", "amount": "1000"}]
-      }
-    }
-  }
-}
-```
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `ACC_NET` | Network (mainnet/testnet/devnet) | testnet |
+| `ACC_LTA_URL` | Your Lite Token Account URL | Generated |
+| `ACC_FROM_URL` | Transaction source account | Generated |
+| `ACC_TO_URL` | Transaction destination account | Generated |
+| `ACC_AMOUNT` | Token amount to send | 1000 |
 
-## Network Endpoints
+## Network Configuration
 
-The SDK supports all Accumulate networks:
+### Testnet (Recommended for Development)
+- Faucet available for free tokens
+- Stable environment for testing
+- Same protocol as mainnet
 
-- **Mainnet**: Production network
-- **Testnet**: Test network with faucet available
-- **DevNet**: Development network for testing
+### DevNet (Local Development)
+- Run locally for fastest iteration
+- Full protocol support
+- Start with `000_boot_devnet_local.dart`
 
-Environment variables:
-- `ACC_NET`: Network selection (mainnet/testnet/devnet)
-- `ACC_LTA_URL`: Your Lite Token Account URL
-- `ACC_FROM_URL`: Source account for transactions
-- `ACC_TO_URL`: Destination account for transactions
-- `ACC_AMOUNT`: Token amount to send
+### Mainnet (Production)
+- Real tokens with value
+- Use with caution
+- Same API as testnet
 
 ## Key Features Demonstrated
 
-- **Ed25519 Cryptography**: Pure Dart implementation with bit-for-bit compatibility
-- **LID/LTA Derivation**: Exact key-to-URL mapping matching Go/TypeScript
-- **Transaction Building**: Type-safe builders for all v3 operations
-- **Envelope Signing**: Verified signing preimage construction
-- **Network Integration**: Unified v2+v3 JSON-RPC client with retries
-- **Error Handling**: Comprehensive error reporting and retry logic
+- **Ed25519 Cryptography**: Pure Dart implementation
+- **Protocol Compatibility**: V2 and V3 API support
+- **Transaction Building**: Type-safe builders for all operations
+- **Error Handling**: Comprehensive retry logic and error reporting
+- **Network Integration**: Unified JSON-RPC client with automatic endpoint discovery
