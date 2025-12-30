@@ -55,7 +55,7 @@ void main() {
       expect(output, contains('v2_version: Success'),
           reason: 'Should successfully get V2 version');
 
-      print('✅ Zero-to-hero integration test passed!');
+      print('[DONE] Zero-to-hero integration test passed!');
     });
 
     test('DevNet health check passes', () async {
@@ -82,7 +82,7 @@ void main() {
       expect(output, contains('DevNet is ready for examples'),
           reason: 'DevNet should be confirmed ready');
 
-      print('✅ DevNet health check passed!');
+      print('[DONE] DevNet health check passed!');
     });
   });
 }

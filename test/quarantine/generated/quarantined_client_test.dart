@@ -29,7 +29,7 @@ void main() {
       expect(typesFile.existsSync(), isTrue, reason: 'dart_types.dart should exist in test_output');
       expect(pubspecFile.existsSync(), isTrue, reason: 'pubspec.yaml should exist in test_output');
 
-      print('✓ All generated files exist in quarantined test_output directory');
+      print('[OK] All generated files exist in quarantined test_output directory');
     });
 
     test('Generated files are properly isolated from public lib', () {
@@ -51,7 +51,7 @@ void main() {
       expect(hasGeneratedFiles, isFalse,
           reason: 'No generated root files should exist in public lib');
 
-      print('✓ Public lib is clean of generated files');
+      print('[OK] Public lib is clean of generated files');
     });
 
     test('Generated client structure is valid', () {
@@ -68,7 +68,7 @@ void main() {
       expect(clientContent, contains('query('));
       expect(clientContent, contains('faucet('));
 
-      print('✓ Generated client has expected structure and methods');
+      print('[OK] Generated client has expected structure and methods');
     });
 
     test('Template mechanism works correctly', () {
@@ -88,7 +88,7 @@ void main() {
       expect(typesContent, contains('class Url'));
       expect(typesContent, contains('class Hash'));
 
-      print('✓ Template mechanism generates expected code structure');
+      print('[OK] Template mechanism generates expected code structure');
     });
 
     // TODO: Add tests that actually compile and run generated code

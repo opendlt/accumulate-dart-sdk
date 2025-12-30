@@ -38,7 +38,7 @@ void main() {
         // Test basic V3 query capability
         final result = await accumulate.v3.query({'url': 'acc://dn.acme'});
         expect(result, isNotNull);
-        print('✓ DevNet V3 query successful');
+        print('[OK] DevNet V3 query successful');
       } catch (e) {
         print('DevNet V3 query failed: $e');
         // This might fail if the account doesn't exist, which is OK
@@ -49,7 +49,7 @@ void main() {
       try {
         final status = await accumulate.v2.status();
         expect(status, isNotNull);
-        print('✓ DevNet V2 status successful: ${status.runtimeType}');
+        print('[OK] DevNet V2 status successful: ${status.runtimeType}');
       } catch (e) {
         print('DevNet V2 status failed: $e');
         // V2 status might have specific requirements, that's OK for testing
@@ -60,7 +60,7 @@ void main() {
       final faucetAccount = devnetConfig['ACC_FAUCET_ACCOUNT']!;
       expect(faucetAccount, startsWith('acc://'));
       expect(faucetAccount, endsWith('/ACME'));
-      print('✓ Faucet account discovered: $faucetAccount');
+      print('[OK] Faucet account discovered: $faucetAccount');
     });
 
     test('Environment variables export', () {
@@ -75,7 +75,7 @@ void main() {
       expect(exports.any((e) => e.contains('ACC_RPC_URL_V3')), isTrue);
       expect(exports.any((e) => e.contains('ACC_FAUCET_ACCOUNT')), isTrue);
 
-      print('✓ Environment exports generated:');
+      print('[OK] Environment exports generated:');
       exports.forEach(print);
     });
 
