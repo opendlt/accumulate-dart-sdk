@@ -49,11 +49,11 @@ Future<void> main() async {
       });
       print("New balance query result: $newBalanceQuery");
 
-      print("✓ Faucet funding completed successfully!");
-      print("✓ LTA: $lta");
+      print("[OK] Faucet funding completed successfully!");
+      print("[OK] LTA: $lta");
 
     } catch (e) {
-      print("✗ Faucet request failed: $e");
+      print("[ERROR] Faucet request failed: $e");
       print("This might happen if:");
       print("  - DevNet faucet has limits or is rate-limited");
       print("  - The faucet account format is incorrect");

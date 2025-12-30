@@ -75,7 +75,7 @@ Future<void> main() async {
 
     if (submitResult['txid'] != null) {
       final txHash = submitResult['txid'];
-      print("✓ CreateDataAccount transaction submitted: $txHash");
+      print("[OK] CreateDataAccount transaction submitted: $txHash");
 
       // Wait for processing
       print("Waiting for transaction to process...");
@@ -99,10 +99,10 @@ Future<void> main() async {
         });
         print("Data account query: $dataAccountQuery");
 
-        print("✓ Data account created successfully!");
-        print("✓ Data Account URL: $dataAccountUrl");
-        print("✓ Transaction Hash: $txHash");
-        print("✓ Ready for data storage operations");
+        print("[OK] Data account created successfully!");
+        print("[OK] Data Account URL: $dataAccountUrl");
+        print("[OK] Transaction Hash: $txHash");
+        print("[OK] Ready for data storage operations");
 
       } catch (e) {
         print("Data account query failed: $e");
@@ -110,11 +110,11 @@ Future<void> main() async {
       }
 
     } else {
-      print("✗ CreateDataAccount transaction failed - no transaction hash");
+      print("[ERROR] CreateDataAccount transaction failed - no transaction hash");
     }
 
   } catch (e) {
-    print("✗ Data account creation failed: $e");
+    print("[ERROR] Data account creation failed: $e");
     print("This might be due to:");
     print("  - ADI doesn't exist");
     print("  - Insufficient credits in key page");

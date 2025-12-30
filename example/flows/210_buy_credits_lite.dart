@@ -63,7 +63,7 @@ Future<void> main() async {
     // Extract transaction hash if available
     if (submitResult['txid'] != null) {
       final txHash = submitResult['txid'];
-      print("✓ Transaction submitted with hash: $txHash");
+      print("[OK] Transaction submitted with hash: $txHash");
 
       // Wait for transaction to process
       print("Waiting for transaction to process...");
@@ -90,13 +90,13 @@ Future<void> main() async {
         print("LID query failed: $e");
       }
 
-      print("✓ AddCredits transaction completed!");
+      print("[OK] AddCredits transaction completed!");
     } else {
-      print("✗ No transaction hash returned");
+      print("[ERROR] No transaction hash returned");
     }
 
   } catch (e) {
-    print("✗ AddCredits transaction failed: $e");
+    print("[ERROR] AddCredits transaction failed: $e");
     print("This might be due to:");
     print("  - Insufficient balance in LTA");
     print("  - Incorrect transaction format");

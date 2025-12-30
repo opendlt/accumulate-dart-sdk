@@ -55,7 +55,7 @@ Future<void> main() async {
 
     // Build SendTokens transaction
     print("Building SendTokens transaction...");
-    final sendTokensBody = TxBody.sendTokens(
+    final sendTokensBody = TxBody.sendTokensSingle(
       toUrl: adiTokenAccountUrl,
       amount: '50000000', // 0.5 ACME (in credits, 10^8 = 1 ACME)
     );
@@ -77,7 +77,7 @@ Future<void> main() async {
 
     if (submitResult['txid'] != null) {
       final txHash = submitResult['txid'];
-      print("✓ SendTokens transaction submitted: $txHash");
+      print("[OK] SendTokens transaction submitted: $txHash");
 
       // Wait for processing
       print("Waiting for transaction to process...");
@@ -109,11 +109,11 @@ Future<void> main() async {
         });
         print("  $adiTokenAfterQuery");
 
-        print("✓ Token transfer completed successfully!");
-        print("✓ Source: $lta");
-        print("✓ Destination: $adiTokenAccountUrl");
-        print("✓ Transaction Hash: $txHash");
-        print("✓ Amount: 0.5 ACME");
+        print("[OK] Token transfer completed successfully!");
+        print("[OK] Source: $lta");
+        print("[OK] Destination: $adiTokenAccountUrl");
+        print("[OK] Transaction Hash: $txHash");
+        print("[OK] Amount: 0.5 ACME");
 
       } catch (e) {
         print("Balance check failed: $e");
@@ -121,11 +121,11 @@ Future<void> main() async {
       }
 
     } else {
-      print("✗ SendTokens transaction failed - no transaction hash");
+      print("[ERROR] SendTokens transaction failed - no transaction hash");
     }
 
   } catch (e) {
-    print("✗ Token transfer failed: $e");
+    print("[ERROR] Token transfer failed: $e");
     print("This might be due to:");
     print("  - Insufficient balance in LTA");
     print("  - ADI token account doesn't exist");

@@ -56,7 +56,7 @@ Future<void> main() async {
     print("Building CreateTokenAccount transaction...");
     final createTokenAccountBody = TxBody.createTokenAccount(
       url: tokenAccountUrl,
-      token: 'acc://ACME', // ACME token URL
+      tokenUrl: 'acc://ACME', // ACME token URL
     );
 
     final ctx = BuildContext(
@@ -76,7 +76,7 @@ Future<void> main() async {
 
     if (submitResult['txid'] != null) {
       final txHash = submitResult['txid'];
-      print("✓ CreateTokenAccount transaction submitted: $txHash");
+      print("[OK] CreateTokenAccount transaction submitted: $txHash");
 
       // Wait for processing
       print("Waiting for transaction to process...");
@@ -100,10 +100,10 @@ Future<void> main() async {
         });
         print("Token account query: $tokenAccountQuery");
 
-        print("✓ Token account created successfully!");
-        print("✓ Token Account URL: $tokenAccountUrl");
-        print("✓ Transaction Hash: $txHash");
-        print("✓ Token Type: ACME");
+        print("[OK] Token account created successfully!");
+        print("[OK] Token Account URL: $tokenAccountUrl");
+        print("[OK] Transaction Hash: $txHash");
+        print("[OK] Token Type: ACME");
 
       } catch (e) {
         print("Token account query failed: $e");
@@ -111,11 +111,11 @@ Future<void> main() async {
       }
 
     } else {
-      print("✗ CreateTokenAccount transaction failed - no transaction hash");
+      print("[ERROR] CreateTokenAccount transaction failed - no transaction hash");
     }
 
   } catch (e) {
-    print("✗ Token account creation failed: $e");
+    print("[ERROR] Token account creation failed: $e");
     print("This might be due to:");
     print("  - ADI doesn't exist");
     print("  - Insufficient credits in key page");

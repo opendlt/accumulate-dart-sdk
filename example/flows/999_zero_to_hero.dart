@@ -48,7 +48,7 @@ Future<void> main() async {
     if (!isHealthy) {
       throw Exception("DevNet is not accessible. Please start DevNet first.");
     }
-    print("✅ DevNet is ready");
+    print("[DONE] DevNet is ready");
     print("");
 
     // Step 1: Generate Keys and URLs
@@ -65,9 +65,9 @@ Future<void> main() async {
     state.tokenAccountUrl = "${state.adiUrl}/tokens";
     state.dataAccountUrl = "${state.adiUrl}/data";
 
-    print("✅ Lite Identity: ${state.lid}");
-    print("✅ Lite Token Account: ${state.lta}");
-    print("✅ ADI URL: ${state.adiUrl}");
+    print("[DONE] Lite Identity: ${state.lid}");
+    print("[DONE] Lite Token Account: ${state.lta}");
+    print("[DONE] ADI URL: ${state.adiUrl}");
     print("");
 
     // Step 2: Fund LTA via Faucet
@@ -84,7 +84,7 @@ Future<void> main() async {
     // Verify LTA has balance
     final ltaBalance = await accumulate.v3.query({'url': state.lta});
     state.addBalance('LTA_initial', ltaBalance);
-    print("✅ LTA funded successfully");
+    print("[DONE] LTA funded successfully");
     print("");
 
     // Step 3: Buy Credits for Lite Identity
@@ -115,7 +115,7 @@ Future<void> main() async {
     // Verify LID has credits
     final lidStatus = await accumulate.v3.query({'url': state.lid});
     state.addBalance('LID_credits', lidStatus);
-    print("✅ Credits purchased for Lite Identity");
+    print("[DONE] Credits purchased for Lite Identity");
     print("");
 
     // Step 4: Create ADI Structure
@@ -197,7 +197,7 @@ Future<void> main() async {
     }
     await Future.delayed(Duration(seconds: 3));
 
-    print("✅ ADI structure created successfully");
+    print("[DONE] ADI structure created successfully");
     print("");
 
     // Step 5: Buy Credits for Key Page
@@ -224,14 +224,14 @@ Future<void> main() async {
     }
     await Future.delayed(Duration(seconds: 3));
 
-    print("✅ Credits added to Key Page");
+    print("[DONE] Credits added to Key Page");
     print("");
 
     // Step 6: Create Token Account
     print("🪙 Step 6: Create ADI Token Account");
     final createTokenAccount = TxBody.createTokenAccount(
       url: state.tokenAccountUrl,
-      token: 'acc://ACME',
+      tokenUrl: 'acc://ACME',
     );
 
     final tokenAccountCtx = BuildContext(
@@ -251,7 +251,7 @@ Future<void> main() async {
     }
     await Future.delayed(Duration(seconds: 3));
 
-    print("✅ Token Account created");
+    print("[DONE] Token Account created");
     print("");
 
     // Step 7: Create Data Account
@@ -277,7 +277,7 @@ Future<void> main() async {
     }
     await Future.delayed(Duration(seconds: 3));
 
-    print("✅ Data Account created");
+    print("[DONE] Data Account created");
     print("");
 
     // Step 8: Write Data
@@ -293,8 +293,11 @@ Future<void> main() async {
       }
     };
 
+    // Convert data to hex (entriesHex expects hex-encoded data)
+    final dataBytes = utf8.encode(jsonEncode(dataPayload));
+    final dataHex = dataBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
     final writeData = TxBody.writeData(
-      entriesBase64: [base64.encode(utf8.encode(jsonEncode(dataPayload)))],
+      entriesHex: [dataHex],
     );
 
     final writeDataCtx = BuildContext(
@@ -314,12 +317,12 @@ Future<void> main() async {
     }
     await Future.delayed(Duration(seconds: 3));
 
-    print("✅ Data written successfully");
+    print("[DONE] Data written successfully");
     print("");
 
     // Step 9: Send Tokens LTA → ADI
     print("💸 Step 9: Send Tokens from LTA to ADI Token Account");
-    final sendTokens = TxBody.sendTokens(
+    final sendTokens = TxBody.sendTokensSingle(
       toUrl: state.tokenAccountUrl,
       amount: '75000000', // 0.75 ACME
     );
@@ -341,11 +344,11 @@ Future<void> main() async {
     }
     await Future.delayed(Duration(seconds: 5));
 
-    print("✅ Tokens transferred successfully");
+    print("[DONE] Tokens transferred successfully");
     print("");
 
     // Step 10: Final Verification
-    print("✅ Step 10: Final Balance Verification");
+    print("[DONE] Step 10: Final Balance Verification");
 
     // Check final balances
     final ltaFinal = await accumulate.v3.query({'url': state.lta});
@@ -382,12 +385,12 @@ Future<void> main() async {
     });
     print("");
 
-    print("✅ All operations completed successfully!");
+    print("[DONE] All operations completed successfully!");
     print("🚀 Accumulate Dart SDK Zero-to-Hero flow demonstration complete!");
 
   } catch (e, stackTrace) {
     print("");
-    print("❌ === FLOW FAILED ===");
+    print("[FAIL] === FLOW FAILED ===");
     print("Error: $e");
     print("Stack trace: $stackTrace");
     print("");

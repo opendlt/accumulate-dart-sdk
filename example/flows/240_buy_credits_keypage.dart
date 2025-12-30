@@ -78,7 +78,7 @@ Future<void> main() async {
 
     if (submitResult['txid'] != null) {
       final txHash = submitResult['txid'];
-      print("✓ AddCredits transaction submitted: $txHash");
+      print("[OK] AddCredits transaction submitted: $txHash");
 
       // Wait for processing
       print("Waiting for transaction to process...");
@@ -102,20 +102,20 @@ Future<void> main() async {
         });
         print("Key page after credits: $keyPageQuery");
 
-        print("✓ Credits successfully added to key page!");
-        print("✓ Key Page: $keyPageUrl");
-        print("✓ Transaction: $txHash");
+        print("[OK] Credits successfully added to key page!");
+        print("[OK] Key Page: $keyPageUrl");
+        print("[OK] Transaction: $txHash");
 
       } catch (e) {
         print("Key page query failed: $e");
       }
 
     } else {
-      print("✗ AddCredits transaction failed - no transaction hash");
+      print("[ERROR] AddCredits transaction failed - no transaction hash");
     }
 
   } catch (e) {
-    print("✗ AddCredits for key page failed: $e");
+    print("[ERROR] AddCredits for key page failed: $e");
     print("This might be due to:");
     print("  - Insufficient balance in LTA");
     print("  - Key page doesn't exist");

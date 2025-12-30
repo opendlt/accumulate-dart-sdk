@@ -14,11 +14,11 @@ Future<void> main() async {
   final isHealthy = await config.checkDevNetHealth();
 
   if (isHealthy) {
-    print("✓ DevNet is running and accessible");
-    print("✓ Endpoints: V2=${config.v2}, V3=${config.v3}");
-    print("✓ Faucet: ${config.faucetAccount}");
+    print("[OK] DevNet is running and accessible");
+    print("[OK] Endpoints: V2=${config.v2}, V3=${config.v3}");
+    print("[OK] Faucet: ${config.faucetAccount}");
   } else {
-    print("✗ DevNet is not accessible");
+    print("[ERROR] DevNet is not accessible");
     print("");
     print("To start DevNet:");
     print("1. cd ${config.devnetDir}");
@@ -30,5 +30,5 @@ Future<void> main() async {
   }
 
   print("");
-  print("DevNet is ready for examples! ✅");
+  print("DevNet is ready for examples!");
 }

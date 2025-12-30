@@ -30,7 +30,7 @@ Future<void> main() async {
     if (!isHealthy) {
       throw Exception("DevNet is not accessible. Please start DevNet first.");
     }
-    print("✅ DevNet is ready");
+    print("[DONE] DevNet is ready");
     print("");
 
     // Step 1: Generate Keys and URLs
@@ -42,9 +42,9 @@ Future<void> main() async {
     final adiSuffix = DateTime.now().millisecondsSinceEpoch.toString().substring(8);
     state.adiUrl = "acc://simple-hero-$adiSuffix.acme";
 
-    print("✅ Lite Identity: ${state.lid}");
-    print("✅ Lite Token Account: ${state.lta}");
-    print("✅ Planned ADI URL: ${state.adiUrl}");
+    print("[DONE] Lite Identity: ${state.lid}");
+    print("[DONE] Lite Token Account: ${state.lta}");
+    print("[DONE] Planned ADI URL: ${state.adiUrl}");
     print("");
 
     // Step 2: Try Faucet Funding
@@ -57,11 +57,11 @@ Future<void> main() async {
       print("Faucet response: $faucetResult");
       if (faucetResult['txid'] != null) {
         state.txHashes.add(faucetResult['txid']);
-        print("✅ Faucet request submitted with tx: ${faucetResult['txid']}");
+        print("[DONE] Faucet request submitted with tx: ${faucetResult['txid']}");
       }
       state.results['faucet'] = faucetResult;
     } catch (e) {
-      print("⚠️ Faucet request failed: $e");
+      print("[WARN] Faucet request failed: $e");
       state.results['faucet_error'] = e.toString();
     }
     print("");
@@ -72,9 +72,9 @@ Future<void> main() async {
       final networkStatus = await accumulate.v3.rawCall('network-status', {});
       print("Network status: $networkStatus");
       state.results['network_status'] = networkStatus;
-      print("✅ Network status retrieved");
+      print("[DONE] Network status retrieved");
     } catch (e) {
-      print("⚠️ Network status failed: $e");
+      print("[WARN] Network status failed: $e");
       state.results['network_status_error'] = e.toString();
     }
     print("");
@@ -87,9 +87,9 @@ Future<void> main() async {
       final ltaQuery = await accumulate.v3.query({'url': state.lta});
       print("LTA query result: $ltaQuery");
       state.results['lta_query'] = ltaQuery;
-      print("✅ LTA exists and was queried successfully");
+      print("[DONE] LTA exists and was queried successfully");
     } catch (e) {
-      print("⚠️ LTA query failed (expected if not funded): $e");
+      print("[WARN] LTA query failed (expected if not funded): $e");
       state.results['lta_query_error'] = e.toString();
     }
 
@@ -98,9 +98,9 @@ Future<void> main() async {
       final lidQuery = await accumulate.v3.query({'url': state.lid});
       print("LID query result: $lidQuery");
       state.results['lid_query'] = lidQuery;
-      print("✅ LID exists and was queried successfully");
+      print("[DONE] LID exists and was queried successfully");
     } catch (e) {
-      print("⚠️ LID query failed (expected if no credits): $e");
+      print("[WARN] LID query failed (expected if no credits): $e");
       state.results['lid_query_error'] = e.toString();
     }
     print("");
@@ -113,9 +113,9 @@ Future<void> main() async {
       final v2Version = await accumulate.v2.version();
       print("V2 version: $v2Version");
       state.results['v2_version'] = v2Version;
-      print("✅ V2 version retrieved");
+      print("[DONE] V2 version retrieved");
     } catch (e) {
-      print("⚠️ V2 version failed: $e");
+      print("[WARN] V2 version failed: $e");
       state.results['v2_version_error'] = e.toString();
     }
 
@@ -124,9 +124,9 @@ Future<void> main() async {
       final v2Status = await accumulate.v2.status();
       print("V2 status: $v2Status");
       state.results['v2_status'] = v2Status;
-      print("✅ V2 status retrieved");
+      print("[DONE] V2 status retrieved");
     } catch (e) {
-      print("⚠️ V2 status failed: $e");
+      print("[WARN] V2 status failed: $e");
       state.results['v2_status_error'] = e.toString();
     }
     print("");
@@ -148,9 +148,9 @@ Future<void> main() async {
     print("📊 API Results:");
     state.results.forEach((key, value) {
       if (key.endsWith('_error')) {
-        print("  ❌ $key: $value");
+        print("  [FAIL] $key: $value");
       } else {
-        print("  ✅ $key: Success");
+        print("  [DONE] $key: Success");
       }
     });
     print("");
@@ -162,12 +162,12 @@ Future<void> main() async {
     print("  • Faucet Account: ${config.faucetAccount}");
     print("");
 
-    print("✅ Simple Zero-to-Hero flow completed!");
+    print("[DONE] Simple Zero-to-Hero flow completed!");
     print("🚀 DevNet discovery and basic API connectivity verified!");
 
   } catch (e, stackTrace) {
     print("");
-    print("❌ === SIMPLE FLOW FAILED ===");
+    print("[FAIL] === SIMPLE FLOW FAILED ===");
     print("Error: $e");
     print("Stack trace: $stackTrace");
     print("");

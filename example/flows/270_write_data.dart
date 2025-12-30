@@ -69,9 +69,10 @@ Future<void> main() async {
 
     // Build WriteData transaction
     print("Building WriteData transaction...");
-    final dataBase64 = base64.encode(dataBytes);
+    // Convert to hex (entriesHex expects hex-encoded data)
+    final dataHex = dataBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
     final writeDataBody = TxBody.writeData(
-      entriesBase64: [dataBase64],
+      entriesHex: [dataHex],
     );
 
     final ctx = BuildContext(
@@ -91,7 +92,7 @@ Future<void> main() async {
 
     if (submitResult['txid'] != null) {
       final txHash = submitResult['txid'];
-      print("✓ WriteData transaction submitted: $txHash");
+      print("[OK] WriteData transaction submitted: $txHash");
 
       // Wait for processing
       print("Waiting for transaction to process...");
@@ -127,10 +128,10 @@ Future<void> main() async {
         });
         print("Data entries: $entryQuery");
 
-        print("✓ Data write operation completed!");
-        print("✓ Data Account: $dataAccountUrl");
-        print("✓ Transaction Hash: $txHash");
-        print("✓ Data written and verified");
+        print("[OK] Data write operation completed!");
+        print("[OK] Data Account: $dataAccountUrl");
+        print("[OK] Transaction Hash: $txHash");
+        print("[OK] Data written and verified");
 
       } catch (e) {
         print("Data query failed: $e");
@@ -138,11 +139,11 @@ Future<void> main() async {
       }
 
     } else {
-      print("✗ WriteData transaction failed - no transaction hash");
+      print("[ERROR] WriteData transaction failed - no transaction hash");
     }
 
   } catch (e) {
-    print("✗ Data write operation failed: $e");
+    print("[ERROR] Data write operation failed: $e");
     print("This might be due to:");
     print("  - Data account doesn't exist");
     print("  - Insufficient credits in key page");

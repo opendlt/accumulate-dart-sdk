@@ -71,7 +71,7 @@ Future<void> main() async {
     print("ADI creation result: $adiResult");
 
     if (adiResult['txid'] != null) {
-      print("✓ ADI created with tx: ${adiResult['txid']}");
+      print("[OK] ADI created with tx: ${adiResult['txid']}");
 
       // Wait for processing
       await Future.delayed(Duration(seconds: 3));
@@ -95,20 +95,20 @@ Future<void> main() async {
         final keyPageQuery = await accumulate.v3.query({'url': keyPageUrl});
         print("Key Page query: $keyPageQuery");
 
-        print("✓ ADI creation completed successfully!");
-        print("✓ ADI: $adiUrl");
-        print("✓ Key Book: $keyBookUrl");
-        print("✓ Key Page: $keyPageUrl");
+        print("[OK] ADI creation completed successfully!");
+        print("[OK] ADI: $adiUrl");
+        print("[OK] Key Book: $keyBookUrl");
+        print("[OK] Key Page: $keyPageUrl");
 
       } catch (e) {
         print("Verification failed: $e");
       }
     } else {
-      print("✗ ADI creation failed");
+      print("[ERROR] ADI creation failed");
     }
 
   } catch (e) {
-    print("✗ ADI creation sequence failed: $e");
+    print("[ERROR] ADI creation sequence failed: $e");
     print("This might be due to:");
     print("  - Insufficient credits in sponsor account");
     print("  - ADI URL already exists");

@@ -33,7 +33,7 @@ Future<void> main() async {
   );
 
   // Build send tokens transaction body
-  final body = TxBody.sendTokens(
+  final body = TxBody.sendTokensSingle(
     toUrl: to,
     amount: amount,
   );
