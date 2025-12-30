@@ -124,10 +124,10 @@ void main() {
       final header = TransactionHeader(
         Principal: 'acc://test.acme/identity',
         Initiator: Uint8List.fromList([1, 2, 3, 4]),
-        Authorities: 'acc://test.acme/auth',
+        Authorities: ['acc://test.acme/auth'],
       );
 
-      expect(header.Authorities, equals('acc://test.acme/auth'));
+      expect(header.Authorities, equals(['acc://test.acme/auth']));
       expect(header.validate(), isTrue);
     });
   });

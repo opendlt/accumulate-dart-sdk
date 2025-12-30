@@ -141,7 +141,7 @@ void main() {
           Metadata: metadata,
           Expire: null,
           HoldUntil: null,
-          Authorities: 'acc://test.acme/authorities'
+          Authorities: ['acc://test.acme/authorities']
         );
         expect(() => validHeader.validate(), returnsNormally);
       });

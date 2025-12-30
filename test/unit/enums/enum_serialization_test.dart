@@ -1,5 +1,7 @@
 import 'package:test/test.dart';
 import 'package:opendlt_accumulate/opendlt_accumulate.dart';
+// Import enums directly to access hidden types for testing
+import 'package:opendlt_accumulate/src/enums.dart' as enums;
 
 void main() {
   group('Enum Serialization Tests', () {
@@ -174,16 +176,16 @@ void main() {
 
     group('VoteType', () {
       test('should serialize to correct values', () {
-        expect(VoteType.Accept.toJson(), equals('0x0'));
-        expect(VoteType.Reject.toJson(), equals('0x1'));
-        expect(VoteType.Abstain.toJson(), equals('0x2'));
-        expect(VoteType.Suggest.toJson(), equals('0x3'));
+        expect(enums.VoteType.Accept.toJson(), equals('0x0'));
+        expect(enums.VoteType.Reject.toJson(), equals('0x1'));
+        expect(enums.VoteType.Abstain.toJson(), equals('0x2'));
+        expect(enums.VoteType.Suggest.toJson(), equals('0x3'));
       });
 
       test('should round-trip correctly', () {
-        for (final value in VoteType.values) {
+        for (final value in enums.VoteType.values) {
           final serialized = value.toJson();
-          final deserialized = VoteType.fromJson(serialized);
+          final deserialized = enums.VoteType.fromJson(serialized);
           expect(deserialized, equals(value), reason: 'Failed round-trip for $value');
         }
       });
@@ -191,20 +193,20 @@ void main() {
 
     group('KeyPageOperationType', () {
       test('should serialize to correct values', () {
-        expect(KeyPageOperationType.Unknown.toJson(), equals('0'));
-        expect(KeyPageOperationType.Update.toJson(), equals('1'));
-        expect(KeyPageOperationType.Remove.toJson(), equals('2'));
-        expect(KeyPageOperationType.Add.toJson(), equals('3'));
-        expect(KeyPageOperationType.SetThreshold.toJson(), equals('4'));
-        expect(KeyPageOperationType.UpdateAllowed.toJson(), equals('5'));
-        expect(KeyPageOperationType.SetRejectThreshold.toJson(), equals('6'));
-        expect(KeyPageOperationType.SetResponseThreshold.toJson(), equals('7'));
+        expect(enums.KeyPageOperationType.Unknown.toJson(), equals('0'));
+        expect(enums.KeyPageOperationType.Update.toJson(), equals('1'));
+        expect(enums.KeyPageOperationType.Remove.toJson(), equals('2'));
+        expect(enums.KeyPageOperationType.Add.toJson(), equals('3'));
+        expect(enums.KeyPageOperationType.SetThreshold.toJson(), equals('4'));
+        expect(enums.KeyPageOperationType.UpdateAllowed.toJson(), equals('5'));
+        expect(enums.KeyPageOperationType.SetRejectThreshold.toJson(), equals('6'));
+        expect(enums.KeyPageOperationType.SetResponseThreshold.toJson(), equals('7'));
       });
 
       test('should round-trip correctly', () {
-        for (final value in KeyPageOperationType.values) {
+        for (final value in enums.KeyPageOperationType.values) {
           final serialized = value.toJson();
-          final deserialized = KeyPageOperationType.fromJson(serialized);
+          final deserialized = enums.KeyPageOperationType.fromJson(serialized);
           expect(deserialized, equals(value), reason: 'Failed round-trip for $value');
         }
       });

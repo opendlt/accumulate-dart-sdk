@@ -67,7 +67,7 @@ void main() {
           memo: "test transaction");
 
       final body =
-          TxBody.sendTokens(toUrl: "acc://bob.acme/tokens", amount: "1000");
+          TxBody.sendTokensSingle(toUrl: "acc://bob.acme/tokens", amount: "1000");
 
       final envelope =
           await TxSigner.buildAndSign(ctx: ctx, body: body, keypair: kp);
@@ -91,7 +91,7 @@ void main() {
       expect(header["memo"], equals(ctx.memo));
 
       final txBody = envelope.transaction["body"];
-      expect(txBody["type"], equals("send-tokens"));
+      expect(txBody["type"], equals("sendTokens"));
       expect(txBody["to"][0]["url"], equals("acc://bob.acme/tokens"));
       expect(txBody["to"][0]["amount"], equals("1000"));
     });
@@ -102,7 +102,7 @@ void main() {
           principal: "acc://test.acme/book", timestamp: 1234567890);
 
       final body = TxBody.createTokenAccount(
-          url: "acc://test.acme/tokens", token: "acc://acme");
+          url: "acc://test.acme/tokens", tokenUrl: "acc://acme");
 
       final envelope =
           await TxSigner.buildAndSign(ctx: ctx, body: body, keypair: kp);
