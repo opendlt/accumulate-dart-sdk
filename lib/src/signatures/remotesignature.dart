@@ -1,12 +1,9 @@
 /// RemoteSignature signature implementation
 library;
 
-import 'dart:convert';
 import 'dart:typed_data';
-import '../runtime/canonical_json.dart';
 import '../runtime/bytes.dart';
 import '../runtime/url.dart';
-import '../enums.dart';
 import 'signatures.dart';
 
 /// RemoteSignature signature

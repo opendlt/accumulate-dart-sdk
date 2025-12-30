@@ -1,10 +1,8 @@
 library signatures;
 
 import 'dart:typed_data';
-import '../enums.dart';
 import '../runtime/validate.dart';
 import '../runtime/bytes.dart';
-import '../runtime/url.dart';
 
 part 'authoritysignature_signature.dart';
 part 'btclegacysignature_signature.dart';
