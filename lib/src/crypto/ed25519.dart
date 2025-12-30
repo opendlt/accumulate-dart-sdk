@@ -33,6 +33,20 @@ class Ed25519KeyPair {
     return Ed25519KeyPair._(kp, pk);
   }
 
+  /// Create key pair from 64-byte private key (NaCl/LibSodium format: seed || public key)
+  ///
+  /// This format is commonly used in key storage and export:
+  /// - First 32 bytes: seed (used to derive the key pair)
+  /// - Last 32 bytes: public key (typically ignored, re-derived from seed)
+  static Future<Ed25519KeyPair> fromPrivateKeyBytes(Uint8List privateKey64) async {
+    if (privateKey64.length != 64) {
+      throw ArgumentError("Private key must be exactly 64 bytes (seed || public key format)");
+    }
+    // Extract the seed (first 32 bytes) and create key pair
+    final seed = Uint8List.sublistView(privateKey64, 0, 32);
+    return fromSeed(seed);
+  }
+
   /// Get public key as bytes
   Future<Uint8List> publicKeyBytes() async {
     return Uint8List.fromList(publicKey.bytes);
@@ -66,15 +80,8 @@ class Ed25519KeyPair {
     // Use first 20 bytes - Go: protocol/protocol.go:274
     final keyHash20 = Uint8List.fromList(keyHashFull.take(20).toList());
 
-    // Convert to hex string - Go: protocol/protocol.go:274
-    final keyStr = toHex(keyHash20);
-
-    // Calculate checksum - Go: protocol/protocol.go:275-276
-    final checksumFull = sha256.convert(utf8Bytes(keyStr)).bytes;
-    final checksum = toHex(Uint8List.fromList(checksumFull.skip(28).toList()));
-
-    // Format: acc://<keyHash[0:20]><checksum> - Go: protocol/protocol.go:277
-    return AccUrl.parse("acc://$keyStr$checksum");
+    // Use centralized derivation function
+    return AccUrl.parse(deriveLiteIdentityFromKeyHash(keyHash20));
   }
 
   /// Derive Lite Token Account URL for ACME
