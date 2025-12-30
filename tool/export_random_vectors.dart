@@ -182,7 +182,7 @@ class RandomVectorGenerator {
   Map<String, dynamic> generateCreateTokenAccountBody() {
     return TxBody.createTokenAccount(
       url: generateRandomTokenUrl(),
-      token: generateRandomTokenIssuer(),
+      tokenUrl: generateRandomTokenIssuer(),
     );
   }
 
@@ -198,10 +198,11 @@ class RandomVectorGenerator {
 
     for (int i = 0; i < entryCount; i++) {
       final data = generateRandomData();
-      entries.add(base64.encode(data));
+      // Convert to hex (entriesHex expects hex-encoded data)
+      entries.add(data.map((b) => b.toRadixString(16).padLeft(2, '0')).join());
     }
 
-    return TxBody.writeData(entriesBase64: entries);
+    return TxBody.writeData(entriesHex: entries);
   }
 
   Map<String, dynamic> generateBurnTokensBody() {

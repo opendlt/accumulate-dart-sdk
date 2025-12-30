@@ -34,7 +34,7 @@ if (-not $NoTests) {
 Write-Host "Skipping documentation generation (generated client has duplicate method conflicts)..."
 Write-Host "Skipping publish dry-run (not ready for publication yet)..."
 
-Write-Host "✅ All preflight checks passed!"
+Write-Host "[DONE] All preflight checks passed!"
 Write-Host ""
 Write-Host "Ready for release. Next steps:"
 Write-Host "1. Update CHANGELOG.md"
