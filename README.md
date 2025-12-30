@@ -1,9 +1,17 @@
 # OpenDLT Accumulate Dart SDK
 
-[![Dart](https://img.shields.io/badge/Dart-3.0+-blue.svg)](https://dart.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.3+-blue.svg)](https://dart.dev)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Dart SDK for the Accumulate blockchain protocol. Supports both V2 and V3 API endpoints with a unified interface.
+Production-ready Dart SDK for the Accumulate blockchain protocol. Supports all signature types, V2/V3 API endpoints, and provides a high-level signing API with automatic version tracking.
+
+## Features
+
+- **Multi-Signature Support**: Ed25519, RCD1, BTC, ETH, RSA-SHA256, ECDSA-SHA256
+- **Smart Signing**: Automatic signer version tracking with `SmartSigner`
+- **Complete Protocol**: All transaction types and account operations
+- **Cross-Platform**: Pure Dart implementation (Flutter/web compatible)
+- **Network Ready**: Mainnet, Testnet (Kermit), and local DevNet support
 
 ## Installation
 
@@ -11,9 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  opendlt_accumulate:
-    path: ../opendlt-dart-v2v3-sdk/UNIFIED  # Local development
-    # git: https://github.com/your-org/opendlt-dart-v2v3-sdk.git  # When published
+  opendlt_accumulate: ^2.0.0
 ```
 
 ## Quick Start
@@ -22,102 +28,178 @@ dependencies:
 import 'package:opendlt_accumulate/opendlt_accumulate.dart';
 
 void main() async {
-  // Connect to network
-  final acc = Accumulate.network(NetworkEndpoint.testnet);
+  // Connect to Kermit testnet
+  final client = Accumulate.network(NetworkEndpoint.testnet);
 
-  // Query account (V3 by default)
-  final account = await acc.query({
-    "type": "query-account",
-    "url": "acc://accumulatenetwork.acme",
+  // Generate key pair and derive lite account URLs
+  final kp = await Ed25519KeyPair.generate();
+  final lid = await kp.deriveLiteIdentityUrl();
+  final lta = await kp.deriveLiteTokenAccountUrl();
+
+  print('Lite Identity: $lid');
+  print('Lite Token Account: $lta');
+
+  // Query account
+  final account = await client.v3.rawCall("query", {
+    "scope": lta.toString(),
+    "query": {"queryType": "default"}
   });
+  print('Account: $account');
 
-  print('Account: ${account}');
-  acc.close();
+  client.close();
 }
+```
+
+## Smart Signing API
+
+The `SmartSigner` class handles version tracking automatically:
+
+```dart
+import 'package:opendlt_accumulate/opendlt_accumulate.dart';
+
+void main() async {
+  final client = Accumulate.network(NetworkEndpoint.testnet);
+  final kp = await Ed25519KeyPair.generate();
+  final lid = await kp.deriveLiteIdentityUrl();
+  final lta = await kp.deriveLiteTokenAccountUrl();
+
+  // Create SmartSigner - automatically queries and tracks signer version
+  final signer = SmartSigner(
+    client: client.v3,
+    keypair: UnifiedKeyPair.fromEd25519(kp),
+    signerUrl: lid.toString(),
+  );
+
+  // Sign, submit, and wait for delivery in one call
+  final result = await signer.signSubmitAndWait(
+    principal: lta.toString(),
+    body: TxBody.sendTokensSingle(
+      toUrl: "acc://recipient.acme/tokens",
+      amount: "100000000", // 1 ACME
+    ),
+    memo: "Payment",
+  );
+
+  if (result.success) {
+    print('Transaction delivered: ${result.txid}');
+  }
+
+  client.close();
+}
+```
+
+## Supported Signature Types
+
+| Type | Key Pair Class | Use Case |
+|------|---------------|----------|
+| Ed25519 | `Ed25519KeyPair` | Default, recommended |
+| RCD1 | `RCD1KeyPair` | Factom compatibility |
+| BTC | `Secp256k1KeyPair` | Bitcoin ecosystem |
+| ETH | `Secp256k1KeyPair` | Ethereum ecosystem |
+| RSA-SHA256 | `RsaKeyPair` | Enterprise/legacy systems |
+| ECDSA-SHA256 | `EcdsaKeyPair` | P-256 curve operations |
+
+## Transaction Builders
+
+Build transactions using the `TxBody` class:
+
+```dart
+// Send tokens
+TxBody.sendTokensSingle(toUrl: "acc://...", amount: "100000000");
+
+// Add credits
+TxBody.addCredits(recipient: "acc://...", amount: "1000000", oracle: oraclePrice);
+
+// Create ADI
+TxBody.createIdentity(url: "acc://my-adi.acme", keyBookUrl: "acc://my-adi.acme/book", publicKeyHash: keyHash);
+
+// Create token account
+TxBody.createTokenAccount(url: "acc://my-adi.acme/tokens", tokenUrl: "acc://ACME");
+
+// Create custom token
+TxBody.createToken(url: "acc://my-adi.acme/mytoken", symbol: "MTK", precision: 8);
+
+// Write data
+TxBody.writeData(entriesHex: [dataHex]);
+```
+
+## Network Endpoints
+
+```dart
+// Public networks
+Accumulate.network(NetworkEndpoint.mainnet);  // Production
+Accumulate.network(NetworkEndpoint.testnet);  // Kermit testnet
+
+// Local development
+Accumulate.network(NetworkEndpoint.devnet);   // localhost:26660
+
+// Custom endpoint
+Accumulate.custom(
+  v2Endpoint: "https://your-node.com/v2",
+  v3Endpoint: "https://your-node.com/v3",
+);
 ```
 
 ## Examples
 
-See [`example/`](example/) for complete usage examples:
+See [`example/v3/`](example/v3/) for complete working examples:
 
-- **Basic Operations**: Account queries, transaction submission
-- **Identity Management**: Creating ADIs, lite accounts
-- **Token Operations**: Sending tokens, managing credits
-- **DevNet Setup**: Local development environment
-- **Zero-to-Hero**: Complete workflow from setup to transactions
+| Example | Description |
+|---------|-------------|
+| `SDK_Examples_file_1_lite_identities_v3.dart` | Lite identity and token account operations |
+| `SDK_Examples_file_2_Accumulate_Identities_v3.dart` | ADI creation |
+| `SDK_Examples_file_3_ADI_Token_Accounts_v3.dart` | ADI token account management |
+| `SDK_Examples_file_4_Data_Accounts_and_Entries_v3.dart` | Data account operations |
+| `SDK_Examples_file_5_Send_ACME_ADI_to_ADI_v3.dart` | ADI-to-ADI transfers |
+| `SDK_Examples_file_6_Custom_Tokens_copy_v3.dart` | Custom token creation |
+| `SDK_Examples_file_9_Key_Management_v3.dart` | Key page and key book management |
 
 Run any example:
 ```bash
-dart run example/flows/999_zero_to_hero_simple.dart
+dart run example/v3/SDK_Examples_file_1_lite_identities_v3.dart
 ```
-
-## API Overview
-
-### Unified Interface
-```dart
-final acc = Accumulate.network(NetworkEndpoint.mainnet);
-
-// V3 API (default)
-await acc.query(queryData);
-await acc.submit(transaction);
-
-// V2 API (legacy support)
-await acc.v2.executeDirect(txData);
-
-// Raw access
-await acc.v3.rawCall("query", params);
-```
-
-### Network Endpoints
-- **Mainnet**: `NetworkEndpoint.mainnet`
-- **Testnet**: `NetworkEndpoint.testnet`
-- **DevNet**: `NetworkEndpoint.devnet` (localhost:26660)
-- **Custom**: `NetworkEndpoint.custom("https://your-node.com")`
 
 ## Project Structure
 
 ```
 lib/
-├── src/generated/       # Generated code (DO NOT EDIT)
-│   ├── api/            # API clients
-│   ├── types/          # Protocol types
-│   └── runtime/        # Validation & helpers
-├── src/                # Hand-written SDK code
-│   ├── api/           # High-level API wrappers
-│   ├── codec/         # Encoding/decoding
-│   ├── signatures/    # Cryptographic signatures
-│   └── transactions/  # Transaction builders
-example/                # Usage examples
-test/                   # Test suite (organized by function)
-tool/                   # Build and development tools
+├── src/
+│   ├── api/           # Client wrappers
+│   ├── build/         # Transaction builders (TxBody, TxSigner)
+│   ├── codec/         # Binary encoding
+│   ├── crypto/        # Key pair implementations
+│   ├── signing/       # SmartSigner, KeyManager
+│   └── signatures/    # Signature type classes
+example/
+├── v3/                # V3 API examples with SmartSigner
+└── flows/             # Step-by-step workflow examples
+test/
+├── unit/              # Unit tests
+├── integration/       # Network integration tests
+└── conformance/       # Cross-implementation compatibility
 ```
 
 ## Development
 
 ### Running Tests
 ```bash
-# All tests
-dart test
-
-# Specific categories
-dart test test/unit/
-dart test test/conformance/
-dart test test/integration/
+dart test                    # All tests
+dart test test/unit/         # Unit tests only
+dart test test/integration/  # Integration tests (requires network)
 ```
 
-### Code Generation
-Generated files are produced by the Accumulate gen-sdk tool from the GitLab Go repository. See [`lib/src/generated/README.md`](lib/src/generated/README.md) for regeneration instructions.
-
-### Build Tools
-See [`tool/README.md`](tool/README.md) for available development tools and scripts.
-
-## Contributing
-
-1. Follow existing code patterns and structure
-2. Add tests for new functionality in appropriate test categories
-3. Run `dart analyze` and fix any issues
-4. Update documentation as needed
+### Code Quality
+```bash
+dart analyze lib/ test/
+dart format lib/ test/ example/
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Links
+
+- [Accumulate Protocol](https://accumulatenetwork.io/)
+- [API Documentation](https://docs.accumulatenetwork.io/)
+- [Kermit Testnet Explorer](https://kermit.explorer.accumulatenetwork.io/)

@@ -2,7 +2,7 @@
 
 All generated files for the OpenDLT Accumulate Dart SDK. These files are automatically created from the Accumulate GitLab Go repository and should never be manually edited.
 
-## ⚠️ Important
+## WARNING: Important
 
 - **DO NOT** edit any files in this directory
 - Files are regenerated from external sources

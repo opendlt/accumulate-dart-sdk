@@ -5,10 +5,13 @@ pubspec.lock
 build/
 coverage/
 
-# Generated docs
-doc/
+# Generated API documentation (use `dart doc` to regenerate)
+doc/api/
 
-# Claude local settings
+# Temporary documentation (audit reports, etc.)
+doc/temp_docs/
+
+# Local settings
 .claude/
 
 # OS / editor junk
@@ -16,6 +19,9 @@ doc/
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # Windows-reserved artifact that breaks Git indexing
 nul
@@ -23,6 +29,18 @@ nul
 # Backup files
 *.bak
 *_backup.dart
+*.orig
 
 # Test artifacts
 test_output/
+*.log
+
+# Temporary files
+temp_*.json
+*.tmp
+
+# Secrets (should never be committed)
+*.env
+.env.*
+credentials.json
+secrets.json

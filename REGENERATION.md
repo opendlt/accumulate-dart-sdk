@@ -115,10 +115,10 @@ dart test
 ```
 
 Expected results:
-- ✅ **18/18** error handling tests pass
-- ✅ **200+** unit tests pass
-- ✅ No import errors
-- ✅ All functionality intact
+- [DONE] **18/18** error handling tests pass
+- [DONE] **200+** unit tests pass
+- [DONE] No import errors
+- [DONE] All functionality intact
 
 ## Rollback Process
 
@@ -160,8 +160,8 @@ The regeneration process may use these environment variables:
 ## Success Indicators
 
 After successful regeneration:
-- ✅ 12 Dart files in `lib/src/generated/`
-- ✅ `dart analyze lib/` shows only warnings
-- ✅ All tests pass
-- ✅ No missing import errors
-- ✅ SDK functionality unchanged
+- [DONE] 12 Dart files in `lib/src/generated/`
+- [DONE] `dart analyze lib/` shows only warnings
+- [DONE] All tests pass
+- [DONE] No missing import errors
+- [DONE] SDK functionality unchanged
