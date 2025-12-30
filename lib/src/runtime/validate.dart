@@ -1,7 +1,5 @@
 library validate;
 
-import 'dart:typed_data';
-
 class Validate {
   /// Validate required field
   static T required<T>(T? value, String fieldName) {

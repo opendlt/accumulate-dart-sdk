@@ -16,6 +16,16 @@ class ClientWrapper {
     return result as Map<String, dynamic>;
   }
 
+  /// Execute transaction directly
+  Future<Map<String, dynamic>> executeDirect(Map<String, dynamic> envelope, {bool checkOnly = false}) async {
+    final params = Map<String, dynamic>.from(envelope);
+    if (checkOnly) {
+      params['checkOnly'] = true;
+    }
+    final result = await _client.call('execute-direct', params);
+    return result as Map<String, dynamic>;
+  }
+
   /// Query account information
   Future<Map<String, dynamic>> query(Map<String, dynamic> queryParams) async {
     final result = await _client.call('query', queryParams);

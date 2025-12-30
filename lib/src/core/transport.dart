@@ -4,7 +4,6 @@
  * - Respect AccumulateOptions.timeoutMs and headers
  */
 import "dart:async";
-import "dart:convert";
 import "dart:io";
 import "package:http/http.dart" as http;
 import "../generated/api/json_rpc_client.dart" as gen; // keep generated internal
@@ -14,16 +13,15 @@ import "options.dart";
 class Transport {
   final gen.JsonRpcClient _inner;
   final AccumulateOptions _opts;
-  final String _userAgent;
+  static const String _userAgent = "opendlt-accumulate-dart/1.0.0";
 
   Transport(String serverUrl, this._opts)
-      : _userAgent = "opendlt-accumulate-dart/1.0.0",
-        _inner = gen.JsonRpcClient(serverUrl, httpClient: _decorateHttp(_opts));
+      : _inner = gen.JsonRpcClient(serverUrl, httpClient: _decorateHttp(_opts));
 
   static http.Client _decorateHttp(AccumulateOptions opts) {
     final base = opts.httpClient ?? http.Client();
     return _HeaderClient(base, {
-      "User-Agent": "opendlt-accumulate-dart/1.0.0",
+      "User-Agent": _userAgent,
       ...opts.headers,
     });
   }
