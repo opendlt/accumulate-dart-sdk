@@ -1,280 +1,360 @@
 // examples/v3/SDK_Examples_file_11_Multi_Signature_Types_v3.dart
-// Demonstrates all supported key types and signature types in Accumulate
 //
-// This example proves the Dart SDK can handle all signature types that
-// the Go core implementation supports:
-// - Ed25519 (standard)
-// - RCD1 (Factom-style Ed25519)
-// - BTC (Bitcoin secp256k1)
-// - ETH (Ethereum secp256k1) - Uses V1 (DER) format for current networks
-// - RSA (RSA-SHA256) - NOTE: Cannot initiate transactions, only co-sign
-// - ECDSA (ECDSA-SHA256 with P-256 curve) - NOTE: Cannot initiate, only co-sign
+// This example demonstrates:
+// - All 6 supported signature types: Ed25519, RCD1, BTC, ETH, RSA, ECDSA
+// - Using UnifiedKeyPair to wrap any key type
+// - Using SmartSigner API for auto-version tracking with each key type
+// - Adding multiple key types to a single key page
+// - Writing data signed with each key type
 //
-// IMPORTANT: ETH signatures have two formats:
-// - V1 (DER format): For networks without V2 Baikonur upgrade (most current networks)
-// - V2 (RSV format): For networks with V2 Baikonur upgrade enabled
-// This example uses ETHv1 which works with DevNet.
-
+// Updated to use Kermit public testnet and SmartSigner API.
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:opendlt_accumulate/opendlt_accumulate.dart';
 
-// Configurable endpoint constant - set to your local devnet
-const String endPoint = "http://127.0.0.1:26660/v3";
-int delayBeforePrintSeconds = 15;
+// Kermit public testnet endpoints
+const String kermitV2 = "https://kermit.accumulatenetwork.io/v2";
+const String kermitV3 = "https://kermit.accumulatenetwork.io/v3";
+
+// For local DevNet testing, uncomment these:
+// const String kermitV2 = "http://127.0.0.1:26660/v2";
+// const String kermitV3 = "http://127.0.0.1:26660/v3";
 
 Future<void> main() async {
-  print("=" * 70);
-  print("V3 API Endpoint: $endPoint");
-  print("Example 11: Multi-Signature Types - All Supported Key & Signature Types");
-  print("=" * 70);
+  print("=== SDK Example 11: Multi-Signature Types ===\n");
+  print("Endpoint: $kermitV3\n");
   await testFeatures();
 }
 
-Future<void> delayBeforePrint() async {
-  await Future.delayed(Duration(seconds: delayBeforePrintSeconds));
-}
-
 Future<void> testFeatures() async {
-  // Create unified client (V2 for faucet, V3 for transactions)
   final client = Accumulate.custom(
-    v2Endpoint: "http://127.0.0.1:26660/v2",
-    v3Endpoint: endPoint,
+    v2Endpoint: kermitV2,
+    v3Endpoint: kermitV3,
   );
 
   try {
-    // ========================================
-    // SETUP: Create ADI with initial Ed25519 key
-    // ========================================
-    print("\n" + "=" * 70);
-    print("PHASE 1: INITIAL SETUP");
-    print("=" * 70);
+    // =========================================================
+    // Step 1: Generate primary key pair (Ed25519 for setup)
+    // =========================================================
+    print("--- Step 1: Generate Primary Key Pairs ---\n");
 
-    // Generate the primary Ed25519 keypair for ADI management
-    final primaryKp = await Ed25519KeyPair.generate();
     final liteKp = await Ed25519KeyPair.generate();
+    final primaryKp = await Ed25519KeyPair.generate();
 
-    // Derive lite identity and token account URLs
+    final liteKey = UnifiedKeyPair.fromEd25519(liteKp);
+
     final lid = await liteKp.deriveLiteIdentityUrl();
     final lta = await liteKp.deriveLiteTokenAccountUrl();
 
-    print("\nLite Identity: $lid");
-    print("Lite Token Account: $lta");
+    print("Lite Identity: $lid");
+    print("Lite Token Account: $lta\n");
 
-    // Fund the lite account with faucet
-    print("\n--- Funding lite account from faucet ---");
-    await addFundsToAccount(client, lta, times: 10);
+    // =========================================================
+    // Step 2: Fund the lite account via faucet
+    // =========================================================
+    print("--- Step 2: Fund Account via Faucet ---\n");
 
-    // Wait for faucet to process
-    print("Waiting for faucet transactions to process...");
-    await Future.delayed(Duration(seconds: 20));
+    await fundAccount(client, lta, faucetRequests: 10);
 
-    // Add credits to the lite identity
-    print("\n--- Adding credits to lite identity ---");
-    await addCredits(client, lid, lta, 2000, liteKp);
+    print("\nPolling for balance...");
+    final balance = await pollForBalance(client, lta.toString());
+    if (balance == null || balance == 0) {
+      print("ERROR: Account not funded. Stopping.");
+      return;
+    }
+    print("Balance confirmed: $balance\n");
 
-    // Wait for addCredits to settle
-    print("Waiting for addCredits to settle...");
-    await Future.delayed(Duration(seconds: 15));
+    // =========================================================
+    // Step 3: Add credits to lite identity
+    // =========================================================
+    print("--- Step 3: Add Credits to Lite Identity ---\n");
 
-    // Create an ADI
-    String adiName = "multi-sig-${DateTime.now().millisecondsSinceEpoch}";
-    print("\n--- Creating ADI: $adiName ---");
-    await createAdi(client, lid, lta, primaryKp, adiName, liteKp);
+    final liteSigner = SmartSigner(
+      client: client.v3,
+      keypair: liteKey,
+      signerUrl: lid.toString(),
+    );
 
-    // Wait for ADI creation to settle
-    print("Waiting for ADI creation to settle...");
-    await Future.delayed(Duration(seconds: 15));
+    final networkStatus = await client.v3.rawCall("network-status", {});
+    final oracle = networkStatus["oracle"]["price"] as int;
+    print("Oracle price: $oracle");
 
-    // Add credits to the ADI key page
-    String keyPageUrl = "acc://$adiName.acme/book/1";
-    String keyBookUrl = "acc://$adiName.acme/book";
-    String adiUrl = "acc://$adiName.acme";
-    print("\nKey Page URL: $keyPageUrl");
-    print("Key Book URL: $keyBookUrl");
-    await addCreditsToAdiKeyPage(client, lid, lta, keyPageUrl, 2000, liteKp);
+    final credits = 3000;
+    final amount = (BigInt.from(credits) * BigInt.from(10000000000)) ~/ BigInt.from(oracle);
 
-    // Pause to allow the addCredits transaction to settle
-    print("Pausing to allow addCredits transaction to settle...");
-    await Future.delayed(Duration(seconds: 20));
+    final addCreditsResult = await liteSigner.signSubmitAndWait(
+      principal: lta.toString(),
+      body: TxBody.addCredits(
+        recipient: lid.toString(),
+        amount: amount.toString(),
+        oracle: oracle,
+      ),
+      memo: "Add credits to lite identity",
+      maxAttempts: 30,
+    );
 
-    // Create a data account for testing write operations
-    String dataAccountUrl = "$adiUrl/test-data";
-    print("\n--- Creating data account: $dataAccountUrl ---");
-    await createDataAccount(client, primaryKp, adiUrl, "test-data", keyPageUrl);
-    await Future.delayed(Duration(seconds: 15));
+    if (addCreditsResult.success) {
+      print("AddCredits SUCCESS - TxID: ${addCreditsResult.txid}\n");
+    } else {
+      print("AddCredits FAILED: ${addCreditsResult.error}");
+      return;
+    }
 
-    // ========================================
-    // PHASE 2: GENERATE ALL KEY TYPES
-    // ========================================
-    print("\n" + "=" * 70);
-    print("PHASE 2: GENERATING ALL KEY TYPES");
-    print("=" * 70);
+    // =========================================================
+    // Step 4: Create ADI
+    // =========================================================
+    print("--- Step 4: Create ADI ---\n");
 
-    // 1. Ed25519 key (already have primaryKp, generate another)
-    final ed25519Key = await Ed25519KeyPair.generate();
-    final ed25519PubKey = await ed25519Key.publicKeyBytes();
+    String adiName = "sdk-msig-${DateTime.now().millisecondsSinceEpoch}";
+    final String identityUrl = "acc://$adiName.acme";
+    final String bookUrl = "$identityUrl/book";
+    final String keyPageUrl = "$bookUrl/1";
+
+    final primaryPubKey = await primaryKp.publicKeyBytes();
+    final primaryKeyHashHex = toHex(Uint8List.fromList(sha256.convert(primaryPubKey).bytes));
+
+    print("ADI URL: $identityUrl");
+    print("Key Page URL: $keyPageUrl\n");
+
+    final createAdiResult = await liteSigner.signSubmitAndWait(
+      principal: lta.toString(),
+      body: TxBody.createIdentity(
+        url: identityUrl,
+        keyBookUrl: bookUrl,
+        publicKeyHash: primaryKeyHashHex,
+      ),
+      memo: "Create ADI for multi-sig demo",
+      maxAttempts: 30,
+    );
+
+    if (createAdiResult.success) {
+      print("CreateIdentity SUCCESS - TxID: ${createAdiResult.txid}\n");
+    } else {
+      print("CreateIdentity FAILED: ${createAdiResult.error}");
+      return;
+    }
+
+    // =========================================================
+    // Step 5: Add credits to ADI key page
+    // =========================================================
+    print("--- Step 5: Add Credits to ADI Key Page ---\n");
+
+    final keyPageCredits = 2000;
+    final keyPageAmount = (BigInt.from(keyPageCredits) * BigInt.from(10000000000)) ~/ BigInt.from(oracle);
+
+    final addKeyPageCreditsResult = await liteSigner.signSubmitAndWait(
+      principal: lta.toString(),
+      body: TxBody.addCredits(
+        recipient: keyPageUrl,
+        amount: keyPageAmount.toString(),
+        oracle: oracle,
+      ),
+      memo: "Add credits to ADI key page",
+      maxAttempts: 30,
+    );
+
+    if (addKeyPageCreditsResult.success) {
+      print("AddCredits to key page SUCCESS - TxID: ${addKeyPageCreditsResult.txid}\n");
+    } else {
+      print("AddCredits to key page FAILED: ${addKeyPageCreditsResult.error}");
+      return;
+    }
+
+    final confirmedCredits = await pollForKeyPageCredits(client, keyPageUrl);
+    if (confirmedCredits == null || confirmedCredits == 0) {
+      print("ERROR: Key page has no credits. Cannot proceed.");
+      return;
+    }
+
+    // =========================================================
+    // Step 6: Create data account for testing signatures
+    // =========================================================
+    print("--- Step 6: Create Data Account ---\n");
+
+    final primaryKey = UnifiedKeyPair.fromEd25519(primaryKp);
+    final primarySigner = SmartSigner(
+      client: client.v3,
+      keypair: primaryKey,
+      signerUrl: keyPageUrl,
+    );
+
+    String dataAccountUrl = "$identityUrl/sig-test-data";
+    print("Creating data account: $dataAccountUrl");
+
+    final createDataResult = await primarySigner.signSubmitAndWait(
+      principal: identityUrl,
+      body: TxBody.createDataAccount(url: dataAccountUrl),
+      memo: "Create data account for signature tests",
+      maxAttempts: 30,
+    );
+
+    if (createDataResult.success) {
+      print("CreateDataAccount SUCCESS - TxID: ${createDataResult.txid}\n");
+    } else {
+      print("CreateDataAccount FAILED: ${createDataResult.error}");
+      return;
+    }
+
+    await Future.delayed(Duration(seconds: 5));
+
+    // =========================================================
+    // Step 7: Generate all 6 key types
+    // =========================================================
+    print("--- Step 7: Generate All Key Types ---\n");
+
+    // 1. Ed25519
+    final ed25519Kp = await Ed25519KeyPair.generate();
+    final ed25519PubKey = await ed25519Kp.publicKeyBytes();
     final ed25519KeyHash = Uint8List.fromList(sha256.convert(ed25519PubKey).bytes);
-    print("\n1. Ed25519 Key Generated");
-    print("   Public Key Hash: ${toHex(ed25519KeyHash)}");
+    print("1. Ed25519 key generated (hash: ${toHex(ed25519KeyHash).substring(0, 32)}...)");
 
-    // 2. RCD1 key (Factom-style)
-    final rcd1Key = await RCD1KeyPair.generate();
-    final rcd1KeyHash = await rcd1Key.publicKeyHash();
-    print("\n2. RCD1 Key Generated (Factom-style)");
-    print("   Public Key Hash: ${toHex(rcd1KeyHash)}");
+    // 2. RCD1 (Factom-style)
+    final rcd1Kp = await RCD1KeyPair.generate();
+    final rcd1KeyHash = await rcd1Kp.publicKeyHash();
+    print("2. RCD1 key generated (hash: ${toHex(rcd1KeyHash).substring(0, 32)}...)");
 
-    // 3. BTC key (secp256k1)
-    final btcKey = Secp256k1KeyPair.generate();
-    final btcPubKey = btcKey.publicKeyBytes;
-    final btcKeyHash = btcKey.btcPublicKeyHash;
-    print("\n3. BTC Key Generated (secp256k1)");
-    print("   Public Key (${btcPubKey.length} bytes): ${toHex(btcPubKey).substring(0, 40)}...");
-    print("   BTC Key Hash: ${toHex(btcKeyHash)}");
+    // 3. BTC (secp256k1)
+    final btcKp = Secp256k1KeyPair.generate();
+    final btcKeyHash = btcKp.btcPublicKeyHash;
+    print("3. BTC key generated (hash: ${toHex(btcKeyHash).substring(0, 32)}...)");
 
-    // 4. ETH key (secp256k1 with ETH hash)
-    final ethKey = Secp256k1KeyPair.generate();
-    final ethPubKey = ethKey.publicKeyBytes;
-    final ethKeyHash = ethKey.ethPublicKeyHash;
-    print("\n4. ETH Key Generated (secp256k1)");
-    print("   Public Key (${ethPubKey.length} bytes): ${toHex(ethPubKey).substring(0, 40)}...");
-    print("   ETH Key Hash: ${toHex(ethKeyHash)}");
+    // 4. ETH (secp256k1)
+    final ethKp = Secp256k1KeyPair.generate();
+    final ethKeyHash = ethKp.ethPublicKeyHash;
+    print("4. ETH key generated (hash: ${toHex(ethKeyHash).substring(0, 32)}...)");
 
-    // 5. RSA key (2048-bit)
-    print("\n5. Generating RSA Key (2048-bit)... (this may take a moment)");
-    final rsaKey = RsaKeyPair.generate(bitLength: 2048);
-    final rsaPubKey = rsaKey.publicKeyBytes;
-    final rsaKeyHash = rsaKey.publicKeyHash;
-    print("   RSA Key Generated");
-    print("   Public Key (${rsaPubKey.length} bytes): ${toHex(rsaPubKey).substring(0, 40)}...");
-    print("   RSA Key Hash: ${toHex(rsaKeyHash)}");
+    // 5. RSA (2048-bit)
+    print("5. Generating RSA key (2048-bit)...");
+    final rsaKp = RsaKeyPair.generate(bitLength: 2048);
+    final rsaKeyHash = rsaKp.publicKeyHash;
+    print("   RSA key generated (hash: ${toHex(rsaKeyHash).substring(0, 32)}...)");
 
-    // 6. ECDSA key (P-256)
-    final ecdsaKey = EcdsaKeyPair.generate(curve: "secp256r1");
-    final ecdsaPubKey = ecdsaKey.publicKeyBytes;
-    final ecdsaKeyHash = ecdsaKey.publicKeyHash;
-    print("\n6. ECDSA Key Generated (P-256/secp256r1)");
-    print("   Public Key (${ecdsaPubKey.length} bytes): ${toHex(ecdsaPubKey).substring(0, 40)}...");
-    print("   ECDSA Key Hash: ${toHex(ecdsaKeyHash)}");
+    // 6. ECDSA (P-256)
+    final ecdsaKp = EcdsaKeyPair.generate(curve: "secp256r1");
+    final ecdsaKeyHash = ecdsaKp.publicKeyHash;
+    print("6. ECDSA key generated (hash: ${toHex(ecdsaKeyHash).substring(0, 32)}...)\n");
 
-    // ========================================
-    // PHASE 3: ADD ALL KEYS TO KEY PAGE
-    // ========================================
-    print("\n" + "=" * 70);
-    print("PHASE 3: ADDING ALL KEYS TO KEY PAGE");
-    print("=" * 70);
+    // =========================================================
+    // Step 8: Add all keys to key page
+    // =========================================================
+    print("--- Step 8: Add All Keys to Key Page ---\n");
 
-    int keyPageVersion = 1;
+    final keyHashes = [
+      {"name": "Ed25519", "hash": ed25519KeyHash},
+      {"name": "RCD1", "hash": rcd1KeyHash},
+      {"name": "BTC", "hash": btcKeyHash},
+      {"name": "ETH", "hash": ethKeyHash},
+      {"name": "RSA", "hash": rsaKeyHash},
+      {"name": "ECDSA", "hash": ecdsaKeyHash},
+    ];
 
-    // Add Ed25519 key
-    print("\n--- Adding Ed25519 key to key page ---");
-    await addKeyToKeyPage(client, primaryKp, keyPageUrl, ed25519KeyHash, keyPageVersion);
-    keyPageVersion++;
-    await Future.delayed(Duration(seconds: 15));
+    for (final entry in keyHashes) {
+      final name = entry["name"] as String;
+      final hash = entry["hash"] as Uint8List;
+      print("Adding $name key to key page...");
 
-    // Add RCD1 key
-    print("\n--- Adding RCD1 key to key page ---");
-    await addKeyToKeyPage(client, primaryKp, keyPageUrl, rcd1KeyHash, keyPageVersion);
-    keyPageVersion++;
-    await Future.delayed(Duration(seconds: 15));
+      final result = await primarySigner.signSubmitAndWait(
+        principal: keyPageUrl,
+        body: TxBody.updateKeyPage(
+          operations: [AddKeyOperation(entry: KeySpecParams(keyHash: hash))],
+        ),
+        memo: "Add $name key",
+        maxAttempts: 30,
+      );
 
-    // Add BTC key (BTC hash is 20 bytes - Accumulate stores as-is)
-    print("\n--- Adding BTC key to key page ---");
-    await addKeyToKeyPage(client, primaryKp, keyPageUrl, btcKeyHash, keyPageVersion);
-    keyPageVersion++;
-    await Future.delayed(Duration(seconds: 15));
+      if (result.success) {
+        print("  $name key added SUCCESS");
+        primarySigner.invalidateCache();
+      } else {
+        print("  $name key add FAILED: ${result.error}");
+      }
+    }
+    print("");
 
-    // Add ETH key (ETH hash is 20 bytes - Accumulate stores as-is)
-    print("\n--- Adding ETH key to key page ---");
-    await addKeyToKeyPage(client, primaryKp, keyPageUrl, ethKeyHash, keyPageVersion);
-    keyPageVersion++;
-    await Future.delayed(Duration(seconds: 15));
+    // Wait for all keys to settle
+    await Future.delayed(Duration(seconds: 5));
 
-    // Add RSA key
-    print("\n--- Adding RSA key to key page ---");
-    await addKeyToKeyPage(client, primaryKp, keyPageUrl, rsaKeyHash, keyPageVersion);
-    keyPageVersion++;
-    await Future.delayed(Duration(seconds: 15));
+    // Verify all keys were added
+    await queryKeyPageState(client, keyPageUrl);
 
-    // Add ECDSA key
-    print("\n--- Adding ECDSA key to key page ---");
-    await addKeyToKeyPage(client, primaryKp, keyPageUrl, ecdsaKeyHash, keyPageVersion);
-    keyPageVersion++;
-    await Future.delayed(Duration(seconds: 15));
+    // =========================================================
+    // Step 9: Write data with each key type
+    // =========================================================
+    print("--- Step 9: Write Data With Each Signature Type ---\n");
 
-    // ========================================
-    // PHASE 4: WRITE DATA WITH EACH KEY TYPE
-    // ========================================
-    print("\n" + "=" * 70);
-    print("PHASE 4: WRITING DATA WITH EACH SIGNATURE TYPE");
-    print("=" * 70);
+    // Build UnifiedKeyPair wrappers and corresponding SmartSigners
+    final sigTests = [
+      {"name": "Ed25519", "key": UnifiedKeyPair.fromEd25519(ed25519Kp), "data": "Hello from Ed25519!"},
+      {"name": "RCD1", "key": UnifiedKeyPair.fromRCD1(rcd1Kp), "data": "Hello from RCD1 (Factom)!"},
+      {"name": "BTC", "key": UnifiedKeyPair.fromBTC(btcKp), "data": "Hello from Bitcoin!"},
+      {"name": "ETH", "key": UnifiedKeyPair.fromETH(ethKp), "data": "Hello from Ethereum!"},
+      {"name": "RSA", "key": UnifiedKeyPair.fromRSA(rsaKp), "data": "Hello from RSA!"},
+      {"name": "ECDSA", "key": UnifiedKeyPair.fromECDSA(ecdsaKp), "data": "Hello from ECDSA P-256!"},
+    ];
 
-    // Write data with Ed25519 signature
-    print("\n--- Writing data with Ed25519 signature ---");
-    await writeDataWithEd25519(client, ed25519Key, dataAccountUrl, keyPageUrl, keyPageVersion,
-        "Hello from Ed25519!");
-    // NOTE: WriteData does NOT increment key page version - only UpdateKeyPage does
-    await Future.delayed(Duration(seconds: 15));
+    int successCount = 0;
+    int failCount = 0;
 
-    // Write data with RCD1 signature
-    print("\n--- Writing data with RCD1 signature ---");
-    await writeDataWithRCD1(client, rcd1Key, dataAccountUrl, keyPageUrl, keyPageVersion,
-        "Hello from RCD1 (Factom)!");
-    await Future.delayed(Duration(seconds: 15));
+    for (final test in sigTests) {
+      final name = test["name"] as String;
+      final key = test["key"] as UnifiedKeyPair;
+      final data = test["data"] as String;
 
-    // Write data with BTC signature
-    print("\n--- Writing data with BTC signature ---");
-    await writeDataWithBTC(client, btcKey, dataAccountUrl, keyPageUrl, keyPageVersion,
-        "Hello from Bitcoin!");
-    await Future.delayed(Duration(seconds: 15));
+      print("Writing data with $name signature...");
 
-    // Write data with ETH signature
-    print("\n--- Writing data with ETH signature ---");
-    await writeDataWithETH(client, ethKey, dataAccountUrl, keyPageUrl, keyPageVersion,
-        "Hello from Ethereum!");
-    await Future.delayed(Duration(seconds: 15));
+      final signer = SmartSigner(
+        client: client.v3,
+        keypair: key,
+        signerUrl: keyPageUrl,
+      );
 
-    // Write data with RSA signature
-    // NOTE: Go code suggests RSA signatures cannot initiate, but testing shows
-    // they work on DevNet. The V3 API accepts them successfully.
-    print("\n--- Writing data with RSA signature ---");
-    await writeDataWithRSA(client, rsaKey, dataAccountUrl, keyPageUrl, keyPageVersion,
-        "Hello from RSA!");
-    await Future.delayed(Duration(seconds: 15));
+      final hexData = toHex(Uint8List.fromList(data.codeUnits));
 
-    // Write data with ECDSA signature
-    // NOTE: Go code suggests ECDSA signatures cannot initiate, but testing shows
-    // they work on DevNet. The V3 API accepts them successfully.
-    print("\n--- Writing data with ECDSA signature ---");
-    await writeDataWithECDSA(client, ecdsaKey, dataAccountUrl, keyPageUrl, keyPageVersion,
-        "Hello from ECDSA P-256!");
-    await Future.delayed(Duration(seconds: 15));
+      try {
+        final result = await signer.signSubmitAndWait(
+          principal: dataAccountUrl,
+          body: TxBody.writeData(entriesHex: [hexData]),
+          memo: "WriteData with $name",
+          maxAttempts: 30,
+        );
 
-    // ========================================
-    // PHASE 5: VERIFY KEY PAGE STATE
-    // ========================================
-    print("\n" + "=" * 70);
-    print("PHASE 5: VERIFYING KEY PAGE STATE");
-    print("=" * 70);
+        if (result.success) {
+          print("  [OK] $name WriteData SUCCESS - TxID: ${result.txid}");
+          successCount++;
+        } else {
+          print("  [FAIL] $name WriteData FAILED: ${result.error}");
+          failCount++;
+        }
+      } catch (e) {
+        print("  [FAIL] $name WriteData ERROR: $e");
+        failCount++;
+      }
+    }
+    print("");
 
-    await queryKeyPage(client, keyPageUrl);
+    // =========================================================
+    // Step 10: Verify key page final state
+    // =========================================================
+    print("--- Step 10: Verify Key Page Final State ---\n");
 
-    // ========================================
-    // SUMMARY
-    // ========================================
-    print("\n" + "=" * 70);
-    print("EXAMPLE 11 COMPLETE - MULTI-SIGNATURE TYPES DEMONSTRATION");
-    print("=" * 70);
-    print("\nSuccessfully demonstrated ALL 6 signature types:");
-    print("  [OK] Ed25519 key generation and signing");
-    print("  [OK] RCD1 (Factom-style) key generation and signing");
-    print("  [OK] BTC (Bitcoin secp256k1) key generation and signing");
-    print("  [OK] ETH (Ethereum secp256k1) key generation and signing");
-    print("  [OK] RSA-SHA256 key generation and signing");
-    print("  [OK] ECDSA-SHA256 (P-256) key generation and signing");
-    print("\nAll 6 signature types successfully used to write data to the data account!");
-    print("The Dart SDK now has full parity with Go core signature types.");
+    await queryKeyPageState(client, keyPageUrl);
+
+    // =========================================================
+    // Summary
+    // =========================================================
+    print("=== Summary ===\n");
+    print("Created ADI: $identityUrl");
+    print("Data Account: $dataAccountUrl");
+    print("Key Page: $keyPageUrl");
+    print("\nSignature Type Results ($successCount/${ successCount + failCount}):");
+    print("  Ed25519:  Standard Ed25519 signing");
+    print("  RCD1:     Factom-style Ed25519 signing");
+    print("  BTC:      Bitcoin secp256k1 signing");
+    print("  ETH:      Ethereum secp256k1 signing (V2 RSV format)");
+    print("  RSA:      RSA-SHA256 signing (2048-bit)");
+    print("  ECDSA:    ECDSA-SHA256 P-256 signing");
+    print("\nUsed SmartSigner API with UnifiedKeyPair for all transactions!");
 
   } catch (e, stack) {
     print("Error: $e");
@@ -284,346 +364,102 @@ Future<void> testFeatures() async {
   }
 }
 
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-
-Future<void> addFundsToAccount(Accumulate client, dynamic lta, {int times = 5}) async {
-  for (int i = 0; i < times; i++) {
-    try {
-      final response = await client.v2.faucet({
-        'type': 'acmeFaucet',
-        'url': lta.toString(),
-      });
-      print("  Faucet request ${i + 1}/$times: ${response['txid'] ?? 'submitted'}");
-      await Future.delayed(Duration(seconds: 2));
-    } catch (e) {
-      print("  Faucet request ${i + 1}/$times failed: $e");
-    }
-  }
-}
-
-Future<void> addCredits(Accumulate client, dynamic lid, dynamic lta,
-    int credits, Ed25519KeyPair liteKp) async {
-  final networkStatus = await client.v3.rawCall("network-status", {});
-  final oracle = networkStatus["oracle"]["price"] as int;
-  final amount = (BigInt.from(credits) * BigInt.from(10000000000)) ~/ BigInt.from(oracle);
-
-  final body = TxBody.buyCredits(
-    recipientUrl: lid.toString(),
-    amount: amount.toString(),
-    oracle: oracle,
-  );
-
-  final ctx = BuildContext(
-    principal: lta.toString(),
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Buy $credits credits",
-  );
-
-  final envelope = await TxSigner.buildAndSign(
-    ctx: ctx,
-    body: body,
-    keypair: liteKp,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  AddCredits response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> addCreditsToAdiKeyPage(Accumulate client, dynamic lid, dynamic lta,
-    String keyPageUrl, int credits, Ed25519KeyPair liteKp) async {
-  final networkStatus = await client.v3.rawCall("network-status", {});
-  final oracle = networkStatus["oracle"]["price"] as int;
-  final amount = (BigInt.from(credits) * BigInt.from(10000000000)) ~/ BigInt.from(oracle);
-
-  final body = TxBody.buyCredits(
-    recipientUrl: keyPageUrl,
-    amount: amount.toString(),
-    oracle: oracle,
-  );
-
-  final ctx = BuildContext(
-    principal: lta.toString(),
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Buy $credits credits for key page",
-  );
-
-  final envelope = await TxSigner.buildAndSign(
-    ctx: ctx,
-    body: body,
-    keypair: liteKp,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  AddCredits to key page response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> createAdi(Accumulate client, dynamic lid, dynamic lta,
-    Ed25519KeyPair adiKp, String adiName, Ed25519KeyPair liteKp) async {
-  final identityUrl = "acc://$adiName.acme";
-  final bookUrl = "$identityUrl/book";
-
-  final publicKey = await adiKp.publicKeyBytes();
-  final keyHash = sha256.convert(publicKey).bytes;
-  final keyHashHex = toHex(Uint8List.fromList(keyHash));
-
-  final body = TxBody.createIdentity(
-    url: identityUrl,
-    keyBookUrl: bookUrl,
-    publicKeyHash: keyHashHex,
-  );
-
-  final ctx = BuildContext(
-    principal: lta.toString(),
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Create ADI: $adiName",
-  );
-
-  final envelope = await TxSigner.buildAndSign(
-    ctx: ctx,
-    body: body,
-    keypair: liteKp,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  CreateIdentity response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> createDataAccount(Accumulate client, Ed25519KeyPair signer,
-    String adiUrl, String accountName, String keyPageUrl) async {
-  final accountUrl = "$adiUrl/$accountName";
-
-  final body = TxBody.createDataAccount(url: accountUrl);
-
-  final ctx = BuildContext(
-    principal: adiUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Create data account: $accountName",
-  );
-
-  final envelope = await TxSigner.buildAndSign(
-    ctx: ctx,
-    body: body,
-    keypair: signer,
-    signerUrl: keyPageUrl,
-    signerVersion: 1,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  CreateDataAccount response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> addKeyToKeyPage(Accumulate client, Ed25519KeyPair signer,
-    String keyPageUrl, Uint8List keyHash, int version) async {
-  final keySpec = KeySpecParams(keyHash: keyHash);
-  final body = TxBody.updateKeyPage(
-    operations: [AddKeyOperation(entry: keySpec)],
-  );
-
-  final ctx = BuildContext(
-    principal: keyPageUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Add key to key page",
-  );
-
-  final envelope = await TxSigner.buildAndSign(
-    ctx: ctx,
-    body: body,
-    keypair: signer,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  AddKey response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-// ============================================================
-// WRITE DATA WITH DIFFERENT SIGNATURE TYPES
-// ============================================================
-
-Future<void> writeDataWithEd25519(Accumulate client, Ed25519KeyPair keypair,
-    String dataAccountUrl, String keyPageUrl, int version, String data) async {
-  final hexData = toHex(Uint8List.fromList(data.codeUnits));
-  final body = TxBody.writeData(entriesHex: [hexData]);
-
-  final ctx = BuildContext(
-    principal: dataAccountUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Write data with Ed25519",
-  );
-
-  final envelope = await TxSigner.buildAndSign(
-    ctx: ctx,
-    body: body,
-    keypair: keypair,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  WriteData (Ed25519) response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> writeDataWithRCD1(Accumulate client, RCD1KeyPair keypair,
-    String dataAccountUrl, String keyPageUrl, int version, String data) async {
-  final hexData = toHex(Uint8List.fromList(data.codeUnits));
-  final body = TxBody.writeData(entriesHex: [hexData]);
-
-  final ctx = BuildContext(
-    principal: dataAccountUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Write data with RCD1",
-  );
-
-  final envelope = await TxSigner.buildAndSignRCD1(
-    ctx: ctx,
-    body: body,
-    keypair: keypair,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  WriteData (RCD1) response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> writeDataWithBTC(Accumulate client, Secp256k1KeyPair keypair,
-    String dataAccountUrl, String keyPageUrl, int version, String data) async {
-  final hexData = toHex(Uint8List.fromList(data.codeUnits));
-  final body = TxBody.writeData(entriesHex: [hexData]);
-
-  final ctx = BuildContext(
-    principal: dataAccountUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Write data with BTC",
-  );
-
-  final envelope = await TxSigner.buildAndSignBTC(
-    ctx: ctx,
-    body: body,
-    keypair: keypair,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  WriteData (BTC) response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> writeDataWithETH(Accumulate client, Secp256k1KeyPair keypair,
-    String dataAccountUrl, String keyPageUrl, int version, String data) async {
-  final hexData = toHex(Uint8List.fromList(data.codeUnits));
-  final body = TxBody.writeData(entriesHex: [hexData]);
-
-  final ctx = BuildContext(
-    principal: dataAccountUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Write data with ETH",
-  );
-
-  // Use ETHv1 (DER format) for networks without V2 Baikonur upgrade
-  // Most current networks including DevNet require V1 format
-  final envelope = await TxSigner.buildAndSignETHv1(
-    ctx: ctx,
-    body: body,
-    keypair: keypair,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  WriteData (ETH) response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> writeDataWithRSA(Accumulate client, RsaKeyPair keypair,
-    String dataAccountUrl, String keyPageUrl, int version, String data) async {
-  final hexData = toHex(Uint8List.fromList(data.codeUnits));
-  final body = TxBody.writeData(entriesHex: [hexData]);
-
-  final ctx = BuildContext(
-    principal: dataAccountUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Write data with RSA",
-  );
-
-  final envelope = await TxSigner.buildAndSignRSA(
-    ctx: ctx,
-    body: body,
-    keypair: keypair,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  WriteData (RSA) response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> writeDataWithECDSA(Accumulate client, EcdsaKeyPair keypair,
-    String dataAccountUrl, String keyPageUrl, int version, String data) async {
-  final hexData = toHex(Uint8List.fromList(data.codeUnits));
-  final body = TxBody.writeData(entriesHex: [hexData]);
-
-  final ctx = BuildContext(
-    principal: dataAccountUrl,
-    timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-    memo: "Write data with ECDSA",
-  );
-
-  final envelope = await TxSigner.buildAndSignECDSA(
-    ctx: ctx,
-    body: body,
-    keypair: keypair,
-    signerUrl: keyPageUrl,
-    signerVersion: version,
-  );
-
-  final response = await client.v3.submit(envelope.toJson());
-  print("  WriteData (ECDSA) response: ${extractTxId(response) ?? 'submitted'}");
-}
-
-Future<void> queryKeyPage(Accumulate client, String keyPageUrl) async {
+/// Query and display key page state
+Future<void> queryKeyPageState(Accumulate client, String keyPageUrl) async {
   try {
-    final result = await client.v3.query({
+    final result = await client.v3.rawCall("query", {
       "scope": keyPageUrl,
-      "query": {"@type": "DefaultQuery"}
+      "query": {"queryType": "default"}
     });
 
     final account = result["account"];
     if (account != null) {
-      print("\nKey Page Query Result:");
-      print("  URL: ${account["url"]}");
-      print("  Type: ${account["type"]}");
-      print("  Version: ${account["version"]}");
-      print("  Threshold: ${account["acceptThreshold"] ?? account["threshold"] ?? 1}");
-      print("  Credits: ${account["creditBalance"] ?? account["credits"] ?? 0}");
+      print("Key Page State:");
+      print("  URL: ${account['url']}");
+      print("  Version: ${account['version']}");
+      print("  Accept Threshold: ${account['acceptThreshold'] ?? 1}");
+      print("  Credits: ${account['creditBalance']}");
 
-      final keys = account["keys"] as List?;
+      final keys = account['keys'] as List?;
       if (keys != null) {
-        print("  Keys (${keys.length} total):");
+        print("  Keys (${keys.length}):");
         for (int i = 0; i < keys.length; i++) {
           final key = keys[i];
-          if (key is Map) {
-            final hash = key["publicKeyHash"] ?? key["publicKey"] ?? "unknown";
-            print("    ${i + 1}. ${hash.toString().substring(0, 40)}...");
-          }
+          final hash = key['publicKeyHash']?.toString() ?? 'N/A';
+          print("    Key ${i + 1}: ${hash.length > 32 ? '${hash.substring(0, 32)}...' : hash}");
         }
       }
+      print("");
     }
   } catch (e) {
-    print("  Query failed: $e");
+    print("Could not query key page: $e\n");
   }
 }
 
-String? extractTxId(dynamic response) {
-  if (response is List && response.isNotEmpty) {
-    final firstResult = response[0];
-    if (firstResult is Map && firstResult["status"] != null) {
-      return firstResult["status"]["txID"]?.toString();
+/// Fund an account using the faucet
+Future<void> fundAccount(Accumulate client, AccUrl accountUrl, {int faucetRequests = 5}) async {
+  print("Requesting funds from faucet ($faucetRequests times)...");
+  for (int i = 0; i < faucetRequests; i++) {
+    try {
+      final response = await client.v2.faucet({
+        'type': 'acmeFaucet',
+        'url': accountUrl.toString(),
+      });
+      final txid = response['txid'];
+      print("  Faucet ${i + 1}/$faucetRequests: $txid");
+      await Future.delayed(Duration(seconds: 2));
+    } catch (e) {
+      print("  Faucet ${i + 1}/$faucetRequests failed: $e");
     }
-  } else if (response is Map) {
-    return (response["txid"] ?? response["transactionHash"])?.toString();
+  }
+}
+
+/// Poll for account balance
+Future<int?> pollForBalance(Accumulate client, String accountUrl, {int maxAttempts = 30}) async {
+  for (int i = 0; i < maxAttempts; i++) {
+    try {
+      final result = await client.v3.rawCall("query", {
+        "scope": accountUrl,
+        "query": {"queryType": "default"}
+      });
+      final balance = result["account"]?["balance"];
+      if (balance != null) {
+        final balanceInt = int.tryParse(balance.toString()) ?? 0;
+        if (balanceInt > 0) {
+          return balanceInt;
+        }
+      }
+      print("  Waiting for balance... (attempt ${i + 1}/$maxAttempts)");
+    } catch (e) {
+      // Account may not exist yet
+    }
+    await Future.delayed(Duration(seconds: 2));
+  }
+  return null;
+}
+
+/// Poll for key page credits
+Future<int?> pollForKeyPageCredits(Accumulate client, String keyPageUrl, {int maxAttempts = 30}) async {
+  print("Waiting for key page credits to settle...");
+  for (int i = 0; i < maxAttempts; i++) {
+    try {
+      final result = await client.v3.rawCall("query", {
+        "scope": keyPageUrl,
+        "query": {"queryType": "default"}
+      });
+      final creditBalance = result["account"]?["creditBalance"];
+      if (creditBalance != null) {
+        final credits = int.tryParse(creditBalance.toString()) ?? 0;
+        if (credits > 0) {
+          print("Key page credits confirmed: $credits");
+          return credits;
+        }
+      }
+      print("  Waiting for credits... (attempt ${i + 1}/$maxAttempts)");
+    } catch (e) {
+      // Key page may not exist yet
+    }
+    await Future.delayed(Duration(seconds: 2));
   }
   return null;
 }

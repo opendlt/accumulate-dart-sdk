@@ -18,8 +18,8 @@ Future<void> main() async {
 
   // Create client and helper
   final client = Accumulate.custom(
-    v2Endpoint: "http://127.0.0.1:26660/v2",
-    v3Endpoint: "http://127.0.0.1:26660/v3",
+    v2Endpoint: "https://kermit.accumulatenetwork.io/v2",
+    v3Endpoint: "https://kermit.accumulatenetwork.io/v3",
   );
   final helper = AccumulateHelper(client);
 

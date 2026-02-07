@@ -335,23 +335,36 @@ Future<void> queryTransactionById(Accumulate client, String txId) async {
 
     // Extract and display signature information if available
     if (txQuery is Map && txQuery["signatures"] != null) {
-      final signatures = txQuery["signatures"] as List;
-      print("\n--- Signature Information ---");
-      for (int i = 0; i < signatures.length; i++) {
-        final sig = signatures[i];
-        print("Signature $i:");
-        print("  Type: ${sig['type'] ?? 'Unknown'}");
-        print("  PublicKey: ${sig['publicKey']?.toString().substring(0, 20) ?? 'N/A'}...");
+      final sigData = txQuery["signatures"];
+      List? signatures;
+      if (sigData is List) {
+        signatures = sigData;
+      } else if (sigData is Map && sigData["records"] is List) {
+        signatures = sigData["records"] as List;
+      }
+      if (signatures != null && signatures.isNotEmpty) {
+        print("\n--- Signature Information ---");
+        for (int i = 0; i < signatures.length; i++) {
+          final sig = signatures[i];
+          print("Signature $i:");
+          print("  Type: ${sig['type'] ?? 'Unknown'}");
+          final pubKey = sig['publicKey']?.toString() ?? '';
+          print("  PublicKey: ${pubKey.length > 20 ? '${pubKey.substring(0, 20)}...' : pubKey}");
+        }
       }
     }
 
     // Extract and display transaction body information
-    if (txQuery is Map && txQuery["transaction"] != null) {
-      final tx = txQuery["transaction"];
+    if (txQuery is Map && txQuery["message"] != null) {
+      final msg = txQuery["message"];
       print("\n--- Transaction Information ---");
-      print("  Principal: ${tx['header']?['principal']}");
-      print("  Memo: ${tx['header']?['memo']}");
-      print("  Body Type: ${tx['body']?['type']}");
+      print("  Type: ${msg['type']}");
+      if (msg['transaction'] != null) {
+        final tx = msg['transaction'];
+        print("  Principal: ${tx['header']?['principal']}");
+        print("  Memo: ${tx['header']?['memo']}");
+        print("  Body Type: ${tx['body']?['type']}");
+      }
     }
     print("");
 

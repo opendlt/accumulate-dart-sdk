@@ -30,11 +30,14 @@ Future<void> main() async {
   print("");
 
   // ============================================================
-  // STEP 1: Connect to DevNet (one line!)
+  // STEP 1: Connect to Kermit testnet (one line!)
   // ============================================================
-  print(">>> Step 1: Connect to DevNet");
-  final acc = QuickStart.devnet();
-  print("    Connected to local DevNet\n");
+  print(">>> Step 1: Connect to Kermit testnet");
+  final acc = QuickStart.custom(
+    v2Endpoint: "https://kermit.accumulatenetwork.io/v2",
+    v3Endpoint: "https://kermit.accumulatenetwork.io/v3",
+  );
+  print("    Connected to Kermit testnet\n");
 
   try {
     // ============================================================

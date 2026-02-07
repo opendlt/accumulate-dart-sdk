@@ -1,457 +1,355 @@
 // examples\v3\SDK_Examples_file_10_UpdateKeyPageThreshold_v3.dart
-// Demonstrates updating key page threshold - requires multiple keys for multi-sig
+//
+// This example demonstrates:
+// - Updating key page threshold for multi-sig
+// - Adding multiple keys to key pages
+// - Setting and verifying threshold changes
+// - Using SmartSigner API for auto-version tracking
+//
+// Updated to use Kermit public testnet and SmartSigner API.
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:opendlt_accumulate/opendlt_accumulate.dart';
 
-// Configurable endpoint constant - set to your local devnet
-const String endPoint = "http://127.0.0.1:26660/v3";
-int delayBeforePrintSeconds = 15;
+// Kermit public testnet endpoints
+const String kermitV2 = "https://kermit.accumulatenetwork.io/v2";
+const String kermitV3 = "https://kermit.accumulatenetwork.io/v3";
+
+// For local DevNet testing, uncomment these:
+// const String kermitV2 = "http://127.0.0.1:26660/v2";
+// const String kermitV3 = "http://127.0.0.1:26660/v3";
 
 Future<void> main() async {
-  print("V3 API Endpoint: $endPoint");
-  print("Example 10: Update Key Page Threshold (Multi-Sig)");
+  print("=== SDK Example 10: Update Key Page Threshold (Multi-Sig) ===\n");
+  print("Endpoint: $kermitV3\n");
   await testFeatures();
 }
 
-Future<void> delayBeforePrint() async {
-  await Future.delayed(Duration(seconds: delayBeforePrintSeconds));
-}
-
 Future<void> testFeatures() async {
-  // Create unified client (V2 for faucet, V3 for transactions)
   final client = Accumulate.custom(
-    v2Endpoint: "http://127.0.0.1:26660/v2",
-    v3Endpoint: endPoint,
+    v2Endpoint: kermitV2,
+    v3Endpoint: kermitV3,
   );
 
   try {
-    // Generate key pairs
+    // =========================================================
+    // Step 1: Generate key pairs
+    // =========================================================
+    print("--- Step 1: Generate Key Pairs ---\n");
+
     final liteKp = await Ed25519KeyPair.generate();
     final adiKp = await Ed25519KeyPair.generate();
-    final secondKey = await Ed25519KeyPair.generate();
+    final secondKp = await Ed25519KeyPair.generate();
 
-    // Derive lite identity and token account URLs
+    final liteKey = UnifiedKeyPair.fromEd25519(liteKp);
+    final adiKey = UnifiedKeyPair.fromEd25519(adiKp);
+
     final lid = await liteKp.deriveLiteIdentityUrl();
     final lta = await liteKp.deriveLiteTokenAccountUrl();
 
-    await printKeypairDetails(liteKp);
+    print("Lite Identity: $lid");
+    print("Lite Token Account: $lta\n");
 
-    // Fund the lite account with faucet
-    print("Lite account URL: $lta\n");
-    await addFundsToAccount(client, lta, times: 5);
+    // =========================================================
+    // Step 2: Fund the lite account via faucet
+    // =========================================================
+    print("--- Step 2: Fund Account via Faucet ---\n");
 
-    // Wait for faucet to process
-    print("Waiting for faucet transactions to process...");
-    await Future.delayed(Duration(seconds: 15));
+    await fundAccount(client, lta, faucetRequests: 5);
 
-    // Add credits to the lite identity
-    await addCredits(client, lid, lta, 500, liteKp);
+    print("\nPolling for balance...");
+    final balance = await pollForBalance(client, lta.toString());
+    if (balance == null || balance == 0) {
+      print("ERROR: Account not funded. Stopping.");
+      return;
+    }
+    print("Balance confirmed: $balance\n");
 
-    // Wait for addCredits to settle
-    print("Waiting for addCredits to settle...");
-    await Future.delayed(Duration(seconds: 15));
+    // =========================================================
+    // Step 3: Add credits to lite identity
+    // =========================================================
+    print("--- Step 3: Add Credits to Lite Identity ---\n");
 
-    // Create an ADI
-    String adiName = "threshold-${DateTime.now().millisecondsSinceEpoch}";
-    await createAdi(client, lid, lta, adiKp, adiName, liteKp);
+    final liteSigner = SmartSigner(
+      client: client.v3,
+      keypair: liteKey,
+      signerUrl: lid.toString(),
+    );
 
-    // Wait for ADI creation to settle
-    print("Waiting for ADI creation to settle...");
-    await Future.delayed(Duration(seconds: 15));
+    final networkStatus = await client.v3.rawCall("network-status", {});
+    final oracle = networkStatus["oracle"]["price"] as int;
+    print("Oracle price: $oracle");
 
-    // Add credits to ADI key page
-    String keyPageUrl = "acc://$adiName.acme/book/1";
-    String keyBookUrl = "acc://$adiName.acme/book";
-    print("Key Page URL: $keyPageUrl");
-    print("Key Book URL: $keyBookUrl");
-    await addCreditsToAdiKeyPage(client, lid, lta, keyPageUrl, 500, liteKp);
+    final credits = 1000;
+    final amount = (BigInt.from(credits) * BigInt.from(10000000000)) ~/ BigInt.from(oracle);
 
-    // Pause to allow the addCredits transaction to settle
-    print("Pausing to allow addCredits transaction to settle...");
-    await Future.delayed(Duration(seconds: 20));
+    final addCreditsResult = await liteSigner.signSubmitAndWait(
+      principal: lta.toString(),
+      body: TxBody.addCredits(
+        recipient: lid.toString(),
+        amount: amount.toString(),
+        oracle: oracle,
+      ),
+      memo: "Add credits to lite identity",
+      maxAttempts: 30,
+    );
 
-    // ========================================
-    // THRESHOLD UPDATE OPERATIONS
-    // ========================================
+    if (addCreditsResult.success) {
+      print("AddCredits SUCCESS - TxID: ${addCreditsResult.txid}\n");
+    } else {
+      print("AddCredits FAILED: ${addCreditsResult.error}");
+      return;
+    }
 
-    // First, query the current key page state
-    print("\n=== Querying Initial Key Page State ===");
+    // =========================================================
+    // Step 4: Create ADI
+    // =========================================================
+    print("--- Step 4: Create ADI ---\n");
+
+    String adiName = "sdk-thresh-${DateTime.now().millisecondsSinceEpoch}";
+    final String identityUrl = "acc://$adiName.acme";
+    final String bookUrl = "$identityUrl/book";
+    final String keyPageUrl = "$bookUrl/1";
+
+    final adiPublicKey = await adiKp.publicKeyBytes();
+    final adiKeyHashHex = toHex(Uint8List.fromList(sha256.convert(adiPublicKey).bytes));
+
+    print("ADI URL: $identityUrl");
+    print("Key Page URL: $keyPageUrl\n");
+
+    final createAdiResult = await liteSigner.signSubmitAndWait(
+      principal: lta.toString(),
+      body: TxBody.createIdentity(
+        url: identityUrl,
+        keyBookUrl: bookUrl,
+        publicKeyHash: adiKeyHashHex,
+      ),
+      memo: "Create ADI via Dart SDK",
+      maxAttempts: 30,
+    );
+
+    if (createAdiResult.success) {
+      print("CreateIdentity SUCCESS - TxID: ${createAdiResult.txid}\n");
+    } else {
+      print("CreateIdentity FAILED: ${createAdiResult.error}");
+      return;
+    }
+
+    // =========================================================
+    // Step 5: Add credits to ADI key page
+    // =========================================================
+    print("--- Step 5: Add Credits to ADI Key Page ---\n");
+
+    final keyPageCredits = 500;
+    final keyPageAmount = (BigInt.from(keyPageCredits) * BigInt.from(10000000000)) ~/ BigInt.from(oracle);
+
+    final addKeyPageCreditsResult = await liteSigner.signSubmitAndWait(
+      principal: lta.toString(),
+      body: TxBody.addCredits(
+        recipient: keyPageUrl,
+        amount: keyPageAmount.toString(),
+        oracle: oracle,
+      ),
+      memo: "Add credits to ADI key page",
+      maxAttempts: 30,
+    );
+
+    if (addKeyPageCreditsResult.success) {
+      print("AddCredits to key page SUCCESS - TxID: ${addKeyPageCreditsResult.txid}\n");
+    } else {
+      print("AddCredits to key page FAILED: ${addKeyPageCreditsResult.error}");
+      return;
+    }
+
+    final confirmedCredits = await pollForKeyPageCredits(client, keyPageUrl);
+    if (confirmedCredits == null || confirmedCredits == 0) {
+      print("ERROR: Key page has no credits. Cannot proceed.");
+      return;
+    }
+
+    // =========================================================
+    // Step 6: Query initial key page state
+    // =========================================================
+    print("--- Step 6: Query Initial Key Page State ---\n");
+
+    final adiSigner = SmartSigner(
+      client: client.v3,
+      keypair: adiKey,
+      signerUrl: keyPageUrl,
+    );
+
     await queryKeyPageState(client, keyPageUrl);
 
-    // Add a second key to the key page so we can set threshold to 2
-    print("\n=== Adding Second Key to Key Page ===");
-    final secondKeyBytes = await secondKey.publicKeyBytes();
-    final secondKeyHash = sha256.convert(secondKeyBytes).bytes;
-    await updateKeyPageAddKey(client, keyPageUrl, Uint8List.fromList(secondKeyHash), adiKp, keyPageUrl);
+    // =========================================================
+    // Step 7: Add second key to key page
+    // =========================================================
+    print("--- Step 7: Add Second Key to Key Page ---\n");
 
-    // Wait for key addition to settle
-    print("Waiting for key addition to settle...");
-    await Future.delayed(Duration(seconds: 20));
+    final secondPublicKey = await secondKp.publicKeyBytes();
+    final secondKeyHash = Uint8List.fromList(sha256.convert(secondPublicKey).bytes);
 
-    // Query key page again to see the new key
-    print("\n=== Querying Key Page After Adding Second Key ===");
+    print("Adding second key (hash: ${toHex(secondKeyHash).substring(0, 32)}...)");
+
+    final addKeyResult = await adiSigner.signSubmitAndWait(
+      principal: keyPageUrl,
+      body: TxBody.updateKeyPage(
+        operations: [AddKeyOperation(entry: KeySpecParams(keyHash: secondKeyHash))],
+      ),
+      memo: "Add second key to key page",
+      maxAttempts: 30,
+    );
+
+    if (addKeyResult.success) {
+      print("AddKey SUCCESS - TxID: ${addKeyResult.txid}\n");
+      adiSigner.invalidateCache();
+    } else {
+      print("AddKey FAILED: ${addKeyResult.error}");
+      return;
+    }
+
+    await Future.delayed(Duration(seconds: 5));
     await queryKeyPageState(client, keyPageUrl);
 
-    // Now update the threshold to 2 (require both keys to sign)
-    print("\n=== Updating Key Page Threshold to 2 ===");
-    await updateKeyPageThreshold(client, keyPageUrl, 2, adiKp, keyPageUrl);
+    // =========================================================
+    // Step 8: Update threshold to 2
+    // =========================================================
+    print("--- Step 8: Update Threshold to 2 ---\n");
 
-    // Wait for threshold update to settle
-    print("Waiting for threshold update to settle...");
-    await Future.delayed(Duration(seconds: 20));
+    print("Setting threshold to 2 (require both keys to sign)");
 
-    // Query key page again to verify threshold change
-    print("\n=== Querying Key Page After Threshold Update ===");
+    final setThresholdResult = await adiSigner.signSubmitAndWait(
+      principal: keyPageUrl,
+      body: TxBody.updateKeyPage(
+        operations: [SetThresholdKeyPageOperation(threshold: 2)],
+      ),
+      memo: "Set threshold to 2",
+      maxAttempts: 30,
+    );
+
+    if (setThresholdResult.success) {
+      print("SetThreshold SUCCESS - TxID: ${setThresholdResult.txid}\n");
+      adiSigner.invalidateCache();
+    } else {
+      print("SetThreshold FAILED: ${setThresholdResult.error}");
+    }
+
+    await Future.delayed(Duration(seconds: 5));
     await queryKeyPageState(client, keyPageUrl);
 
-    // Demonstrate setting threshold back to 1
-    print("\n=== Setting Threshold Back to 1 ===");
-    await updateKeyPageThreshold(client, keyPageUrl, 1, adiKp, keyPageUrl);
+    // =========================================================
+    // Summary
+    // =========================================================
+    print("=== Summary ===\n");
+    print("Created ADI: $identityUrl");
+    print("Key Page: $keyPageUrl");
+    print("\nThreshold Operations:");
+    print("  1. Queried initial key page state (1 key, threshold 1)");
+    print("  2. Added second key to key page");
+    print("  3. Updated threshold to 2 (multi-sig required)");
+    print("\nUsed SmartSigner API for all transactions!");
 
-    // Wait for threshold update to settle
-    print("Waiting for threshold update to settle...");
-    await Future.delayed(Duration(seconds: 20));
-
-    // Final query
-    print("\n=== Final Key Page State ===");
-    await queryKeyPageState(client, keyPageUrl);
-
-    print("\n=== Example 10 Completed Successfully! ===");
-    print("Created ADI: acc://$adiName.acme");
-    print("Key Book URL: $keyBookUrl");
-    print("Key Page URL: $keyPageUrl");
-    print("Added second key to key page");
-    print("Demonstrated threshold updates (1 -> 2 -> 1)");
   } finally {
     client.close();
   }
 }
 
-Future<void> updateKeyPageThreshold(
-    dynamic client,
-    String keyPageUrl,
-    int newThreshold,
-    Ed25519KeyPair signer,
-    String signerKeyPageUrl) async {
-  print("Updating key page threshold: $keyPageUrl to $newThreshold");
-
+/// Query and display key page state
+Future<void> queryKeyPageState(Accumulate client, String keyPageUrl) async {
   try {
-    // Query current key page version for signing
-    int signerVersion = 1;
-    try {
-      final keyPageQuery = await client.v3.query({
-        "scope": signerKeyPageUrl,
-        "query": {"@type": "DefaultQuery"}
-      });
-      if (keyPageQuery["account"] != null) {
-        signerVersion = keyPageQuery["account"]["version"] ?? 1;
-        print("Current key page version: $signerVersion");
-      }
-    } catch (e) {
-      print("Warning: Could not query key page version, using default: $e");
-    }
-
-    // Build update key page transaction using SetThresholdKeyPageOperation
-    final updateKeyPageBody = TxBody.updateKeyPage(
-      operations: [SetThresholdKeyPageOperation(threshold: newThreshold)],
-    );
-
-    // Create transaction context
-    final ctx = BuildContext(
-      principal: keyPageUrl,
-      timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-      memo: "Update key page threshold to $newThreshold",
-    );
-
-    // Sign and build envelope with correct version
-    final envelope = await TxSigner.buildAndSign(
-      ctx: ctx,
-      body: updateKeyPageBody,
-      keypair: signer,
-      signerUrl: signerKeyPageUrl,
-      signerVersion: signerVersion,
-    );
-
-    final response = await client.v3.submit(envelope.toJson());
-    print("Update threshold response: $response");
-
-    // Extract transaction ID from response
-    String? txId;
-    if (response is List && response.isNotEmpty) {
-      final firstResult = response[0];
-      if (firstResult is Map && firstResult["status"] != null) {
-        txId = firstResult["status"]["txID"]?.toString();
-      }
-    }
-    if (txId != null) {
-      print("UpdateKeyPage (threshold) Transaction ID: $txId");
-    }
-  } catch (e) {
-    print("Error updating key page threshold: $e");
-  }
-}
-
-Future<void> updateKeyPageAddKey(
-    dynamic client,
-    String keyPageUrl,
-    Uint8List keyHash,
-    Ed25519KeyPair signer,
-    String signerKeyPageUrl) async {
-  print("Adding key to key page: $keyPageUrl");
-
-  try {
-    // Query current key page version for signing
-    int signerVersion = 1;
-    try {
-      final keyPageQuery = await client.v3.query({
-        "scope": signerKeyPageUrl,
-        "query": {"@type": "DefaultQuery"}
-      });
-      if (keyPageQuery["account"] != null) {
-        signerVersion = keyPageQuery["account"]["version"] ?? 1;
-        print("Current key page version: $signerVersion");
-      }
-    } catch (e) {
-      print("Warning: Could not query key page version, using default: $e");
-    }
-
-    // Build update key page transaction using AddKeyOperation
-    final keySpec = KeySpecParams(keyHash: keyHash);
-    final updateKeyPageBody = TxBody.updateKeyPage(
-      operations: [AddKeyOperation(entry: keySpec)],
-    );
-
-    // Create transaction context
-    final ctx = BuildContext(
-      principal: keyPageUrl,
-      timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-      memo: "Add new key to key page",
-    );
-
-    // Sign and build envelope with correct version
-    final envelope = await TxSigner.buildAndSign(
-      ctx: ctx,
-      body: updateKeyPageBody,
-      keypair: signer,
-      signerUrl: signerKeyPageUrl,
-      signerVersion: signerVersion,
-    );
-
-    final response = await client.v3.submit(envelope.toJson());
-    print("Add key response: $response");
-
-    // Extract transaction ID from response
-    String? txId;
-    if (response is List && response.isNotEmpty) {
-      final firstResult = response[0];
-      if (firstResult is Map && firstResult["status"] != null) {
-        txId = firstResult["status"]["txID"]?.toString();
-      }
-    }
-    if (txId != null) {
-      print("UpdateKeyPage (add key) Transaction ID: $txId");
-    }
-  } catch (e) {
-    print("Error adding key to key page: $e");
-  }
-}
-
-Future<void> queryKeyPageState(dynamic client, String keyPageUrl) async {
-  try {
-    print("Querying key page: $keyPageUrl");
-
-    final keyPageQuery = await client.v3.query({
+    final result = await client.v3.rawCall("query", {
       "scope": keyPageUrl,
-      "query": {
-        "@type": "DefaultQuery"
-      }
+      "query": {"queryType": "default"}
     });
 
-    print("Key page query result:");
+    final account = result["account"];
+    if (account != null) {
+      print("Key Page State:");
+      print("  URL: ${account['url']}");
+      print("  Version: ${account['version']}");
+      print("  Accept Threshold: ${account['acceptThreshold'] ?? 1}");
+      print("  Credits: ${account['creditBalance']}");
 
-    // Display key page information
-    if (keyPageQuery["account"] != null) {
-      final data = keyPageQuery["account"];
-      print("  Type: ${data['type'] ?? 'Unknown'}");
-      print("  URL: ${data['url'] ?? keyPageUrl}");
-      print("  Version: ${data['version'] ?? 'Unknown'}");
-      print("  Accept Threshold: ${data['acceptThreshold'] ?? data['threshold'] ?? 'Not set'}");
-      print("  Credits: ${data['creditBalance'] ?? data['credits'] ?? 'Unknown'}");
-
-      if (data['keys'] != null) {
-        final keys = data['keys'] as List;
+      final keys = account['keys'] as List?;
+      if (keys != null) {
         print("  Keys (${keys.length}):");
         for (int i = 0; i < keys.length; i++) {
           final key = keys[i];
-          if (key is Map) {
-            final pubKeyHash = key['publicKeyHash'] ?? key['publicKey'] ?? 'N/A';
-            print("    Key ${i + 1}: $pubKeyHash");
-          } else {
-            print("    Key ${i + 1}: $key");
-          }
+          final hash = key['publicKeyHash']?.toString() ?? 'N/A';
+          print("    Key ${i + 1}: ${hash.length > 32 ? '${hash.substring(0, 32)}...' : hash}");
         }
       }
-    } else if (keyPageQuery["data"] != null) {
-      final data = keyPageQuery["data"];
-      print("  Type: ${data['type'] ?? 'Unknown'}");
-      print("  URL: ${data['url'] ?? keyPageUrl}");
-      print("  Threshold: ${data['threshold'] ?? 'Not set'}");
-    } else {
-      print("  Raw response: $keyPageQuery");
+      print("");
     }
   } catch (e) {
-    print("Error querying key page state: $e");
+    print("Could not query key page: $e\n");
   }
 }
 
-// Helper functions
-Future<void> createAdi(dynamic client, AccUrl fromLid, AccUrl fromLta, Ed25519KeyPair adiSigner, String adiName, Ed25519KeyPair fundingSigner) async {
-  final String identityUrl = "acc://$adiName.acme";
-  final String bookUrl = "$identityUrl/book";
-
-  final publicKey = await adiSigner.publicKeyBytes();
-  final keyHash = sha256.convert(publicKey).bytes;
-  final keyHashHex = keyHash.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-
-  print("Preparing to create identity:");
-  print("ADI URL: $identityUrl");
-  print("Key Book URL: $bookUrl");
-  print("Key Hash: $keyHashHex");
-
-  try {
-    final createIdentityBody = TxBody.createIdentity(
-      url: identityUrl,
-      keyBookUrl: bookUrl,
-      publicKeyHash: keyHashHex,
-    );
-
-    final ctx = BuildContext(
-      principal: fromLta.toString(),
-      timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-      memo: "Create identity via Dart SDK V3",
-    );
-
-    final envelope = await TxSigner.buildAndSign(
-      ctx: ctx,
-      body: createIdentityBody,
-      keypair: fundingSigner,
-    );
-
-    final response = await client.v3.submit(envelope.toJson());
-    print("Create identity response: $response");
-  } catch (e) {
-    print("Error creating ADI: $e");
-  }
-}
-
-Future<void> addCreditsToAdiKeyPage(dynamic client, AccUrl fromLid, AccUrl fromLta, String keyPageUrl, int creditAmount, Ed25519KeyPair signer) async {
-  print("Adding credits to ADI key page: $keyPageUrl with amount: $creditAmount");
-
-  try {
-    final networkStatus = await client.v3.rawCall("network-status", {});
-    final oracle = networkStatus["oracle"]["price"] as int;
-    print("Current oracle price: $oracle");
-
-    final calculatedAmount = creditAmount * 2000000;
-
-    final addCreditsBody = TxBody.buyCredits(
-      recipientUrl: keyPageUrl,
-      amount: calculatedAmount.toString(),
-      oracle: oracle,
-    );
-
-    final ctx = BuildContext(
-      principal: fromLta.toString(),
-      timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-      memo: "Add credits to key page",
-    );
-
-    final envelope = await TxSigner.buildAndSign(
-      ctx: ctx,
-      body: addCreditsBody,
-      keypair: signer,
-    );
-
-    final response = await client.v3.submit(envelope.toJson());
-    print("Add credits response: $response");
-  } catch (e) {
-    print("Error adding credits: $e");
-  }
-}
-
-Future<void> addFundsToAccount(dynamic client, AccUrl accountUrl, {int times = 10}) async {
-  for (int i = 0; i < times; i++) {
+/// Fund an account using the faucet
+Future<void> fundAccount(Accumulate client, AccUrl accountUrl, {int faucetRequests = 5}) async {
+  print("Requesting funds from faucet ($faucetRequests times)...");
+  for (int i = 0; i < faucetRequests; i++) {
     try {
-      print("Adding funds attempt ${i + 1}/$times to $accountUrl");
-
-      final faucetResponse = await client.v2.faucet({
+      final response = await client.v2.faucet({
         'type': 'acmeFaucet',
         'url': accountUrl.toString(),
       });
-
-      print("Faucet response: $faucetResponse");
-
-      if (faucetResponse['txid'] != null) {
-        final txId = faucetResponse['txid'];
-        print("Faucet transaction ID: $txId");
-        await Future.delayed(Duration(seconds: 3));
-      }
+      final txid = response['txid'];
+      print("  Faucet ${i + 1}/$faucetRequests: $txid");
+      await Future.delayed(Duration(seconds: 2));
     } catch (e) {
-      print("Faucet attempt ${i + 1} failed: $e");
-      if (i < times - 1) {
-        await Future.delayed(Duration(seconds: 3));
-      }
+      print("  Faucet ${i + 1}/$faucetRequests failed: $e");
     }
   }
 }
 
-Future<void> printKeypairDetails(Ed25519KeyPair kp) async {
-  final publicKey = await kp.publicKeyBytes();
-  final publicKeyHex = publicKey.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-
-  print("Public Key: $publicKeyHex");
-  print("Private Key: [HIDDEN - Use kp.privateKeyBytes() to access]");
-  print("");
+/// Poll for account balance
+Future<int?> pollForBalance(Accumulate client, String accountUrl, {int maxAttempts = 30}) async {
+  for (int i = 0; i < maxAttempts; i++) {
+    try {
+      final result = await client.v3.rawCall("query", {
+        "scope": accountUrl,
+        "query": {"queryType": "default"}
+      });
+      final balance = result["account"]?["balance"];
+      if (balance != null) {
+        final balanceInt = int.tryParse(balance.toString()) ?? 0;
+        if (balanceInt > 0) {
+          return balanceInt;
+        }
+      }
+      print("  Waiting for balance... (attempt ${i + 1}/$maxAttempts)");
+    } catch (e) {
+      // Account may not exist yet
+    }
+    await Future.delayed(Duration(seconds: 2));
+  }
+  return null;
 }
 
-Future<void> addCredits(dynamic client, AccUrl recipient, AccUrl fromAccount, int creditAmount, Ed25519KeyPair signer) async {
-  print("Preparing to add credits:");
-  print("Recipient URL: $recipient");
-  print("From Account: $fromAccount");
-  print("Credit Amount: $creditAmount");
-
-  try {
-    print("Getting current oracle price from network...");
-    final networkStatus = await client.v3.rawCall("network-status", {});
-    final oracle = networkStatus["oracle"]["price"] as int;
-    print("Current oracle price: $oracle");
-
-    final calculatedAmount = creditAmount * 2000000;
-    print("Calculated amount: $calculatedAmount");
-
-    final addCreditsBody = TxBody.buyCredits(
-      recipientUrl: recipient.toString(),
-      amount: calculatedAmount.toString(),
-      oracle: oracle,
-    );
-
-    final ctx = BuildContext(
-      principal: fromAccount.toString(),
-      timestamp: DateTime.now().millisecondsSinceEpoch * 1000,
-      memo: "Add credits",
-    );
-
-    final envelope = await TxSigner.buildAndSign(
-      ctx: ctx,
-      body: addCreditsBody,
-      keypair: signer,
-    );
-
-    final response = await client.v3.submit(envelope.toJson());
-    print("Add credits response: $response");
-  } catch (e) {
-    print("Error adding credits: $e");
+/// Poll for key page credits
+Future<int?> pollForKeyPageCredits(Accumulate client, String keyPageUrl, {int maxAttempts = 30}) async {
+  print("Waiting for key page credits to settle...");
+  for (int i = 0; i < maxAttempts; i++) {
+    try {
+      final result = await client.v3.rawCall("query", {
+        "scope": keyPageUrl,
+        "query": {"queryType": "default"}
+      });
+      final creditBalance = result["account"]?["creditBalance"];
+      if (creditBalance != null) {
+        final credits = int.tryParse(creditBalance.toString()) ?? 0;
+        if (credits > 0) {
+          print("Key page credits confirmed: $credits");
+          return credits;
+        }
+      }
+      print("  Waiting for credits... (attempt ${i + 1}/$maxAttempts)");
+    } catch (e) {
+      // Key page may not exist yet
+    }
+    await Future.delayed(Duration(seconds: 2));
   }
+  return null;
 }

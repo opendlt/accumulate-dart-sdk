@@ -206,7 +206,7 @@ Future<void> testFeatures() async {
         precision: precision,
       ),
       memo: "Create custom token: $symbol",
-      maxAttempts: 30,
+      maxAttempts: 45,
     );
 
     if (createTokenResult.success) {
