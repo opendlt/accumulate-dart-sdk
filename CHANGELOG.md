@@ -5,6 +5,14 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-02-07
+
+### Fixed
+- Fixed and verified all v3 examples against Kermit public testnet
+- Modernized Multi-Signature Types example with SmartSigner and UnifiedKeyPair
+- Updated QuickStart and AccumulateHelper examples for Kermit endpoints
+- Removed duplicate custom tokens example
+
 ## [2.0.0] - 2025-12-30
 
 ### Added
