@@ -211,8 +211,47 @@ class TransactionHeaderMarshaler {
       }
     }
 
-    // Field 5: Expire (skip for now - complex nested type)
-    // Field 6: HoldUntil (skip for now - complex nested type)
+    // Field 5: Expire (nested ExpireOptions)
+    // Matches Go: writer.WriteValue(5, v.Expire.MarshalBinary)
+    // where MarshalBinary does writer.WriteTime(1, *v.AtTime)
+    // WriteTime writes field 1 + signed varint (zigzag) of UTC Unix seconds
+    if (header["expire"] != null) {
+      final expire = header["expire"];
+      if (expire is Map) {
+        final atTime = expire["atTime"];
+        if (atTime != null) {
+          DateTime dt;
+          if (atTime is String) {
+            dt = DateTime.parse(atTime);
+          } else if (atTime is DateTime) {
+            dt = atTime;
+          } else {
+            throw ArgumentError("expire.atTime must be String or DateTime");
+          }
+          final unixSeconds = dt.toUtc().millisecondsSinceEpoch ~/ 1000;
+          final nested = BinaryEncoder();
+          nested._writeField(1);
+          nested._writeVarintRaw(unixSeconds);
+          encoder.writeValue(5, nested.toBytes());
+        }
+      }
+    }
+
+    // Field 6: HoldUntil (nested HoldUntilOptions)
+    // Matches Go: writer.WriteValue(6, v.HoldUntil.MarshalBinary)
+    // where MarshalBinary does writer.WriteUint(1, v.MinorBlock)
+    // WriteUint writes field 1 + unsigned varint of minorBlock
+    if (header["holdUntil"] != null) {
+      final holdUntil = header["holdUntil"];
+      if (holdUntil is Map) {
+        final minorBlock = holdUntil["minorBlock"];
+        if (minorBlock != null && minorBlock is int && minorBlock != 0) {
+          final nested = BinaryEncoder();
+          nested.writeUint(1, minorBlock);
+          encoder.writeValue(6, nested.toBytes());
+        }
+      }
+    }
 
     // Field 7: Authorities (repeated URLs)
     if (header["authorities"] != null) {

@@ -155,6 +155,10 @@ class SmartSigner {
   /// - principal: The account URL initiating the transaction
   /// - body: The transaction body map
   /// - memo: Optional transaction memo
+  /// - metadata: Optional binary metadata bytes
+  /// - expire: Optional expiration time (transaction expires after this time)
+  /// - holdUntil: Optional minor block number to hold transaction until
+  /// - authorities: Optional list of additional authority URLs
   /// - vote: Optional vote for governance transactions
   /// - signatureMemo: Optional memo attached to the signature
   /// - signatureData: Optional metadata attached to the signature
@@ -162,6 +166,10 @@ class SmartSigner {
     required String principal,
     required Map<String, dynamic> body,
     String? memo,
+    Uint8List? metadata,
+    DateTime? expire,
+    int? holdUntil,
+    List<String>? authorities,
     VoteType? vote,
     String? signatureMemo,
     Uint8List? signatureData,
@@ -172,7 +180,35 @@ class SmartSigner {
       principal: principal,
       timestamp: DateTime.now().microsecondsSinceEpoch,
       memo: memo,
+      metadata: metadata,
+      expire: expire != null ? ExpireOptions(atTime: expire) : null,
+      holdUntil: holdUntil != null ? HoldUntilOptions(minorBlock: holdUntil) : null,
+      authorities: authorities,
     );
+
+    return _keypair.sign(
+      ctx: ctx,
+      body: body,
+      signerUrl: _signerUrl,
+      signerVersion: version,
+      vote: vote,
+      signatureMemo: signatureMemo,
+      signatureData: signatureData,
+    );
+  }
+
+  /// Sign a transaction with a pre-built BuildContext
+  ///
+  /// Use this when you need full control over the BuildContext,
+  /// including custom timestamps or advanced header options.
+  Future<Envelope> signWithContext({
+    required BuildContext ctx,
+    required Map<String, dynamic> body,
+    VoteType? vote,
+    String? signatureMemo,
+    Uint8List? signatureData,
+  }) async {
+    final version = await getSignerVersion();
 
     return _keypair.sign(
       ctx: ctx,
@@ -194,6 +230,10 @@ class SmartSigner {
     required String principal,
     required Map<String, dynamic> body,
     String? memo,
+    Uint8List? metadata,
+    DateTime? expire,
+    int? holdUntil,
+    List<String>? authorities,
     VoteType? vote,
     String? signatureMemo,
     Uint8List? signatureData,
@@ -202,6 +242,10 @@ class SmartSigner {
       principal: principal,
       body: body,
       memo: memo,
+      metadata: metadata,
+      expire: expire,
+      holdUntil: holdUntil,
+      authorities: authorities,
       vote: vote,
       signatureMemo: signatureMemo,
       signatureData: signatureData,
@@ -219,6 +263,10 @@ class SmartSigner {
     required String principal,
     required Map<String, dynamic> body,
     String? memo,
+    Uint8List? metadata,
+    DateTime? expire,
+    int? holdUntil,
+    List<String>? authorities,
     VoteType? vote,
     String? signatureMemo,
     Uint8List? signatureData,
@@ -229,6 +277,10 @@ class SmartSigner {
       principal: principal,
       body: body,
       memo: memo,
+      metadata: metadata,
+      expire: expire,
+      holdUntil: holdUntil,
+      authorities: authorities,
       vote: vote,
       signatureMemo: signatureMemo,
       signatureData: signatureData,
@@ -289,6 +341,106 @@ class SmartSigner {
           failed = false;
         } else if (statusValue is Map) {
           // Status is a map with delivered/failed fields
+          delivered = statusValue["delivered"] == true;
+          failed = statusValue["failed"] == true;
+          if (failed) {
+            final errorObj = statusValue["error"];
+            if (errorObj is Map) {
+              errorMsg = errorObj["message"]?.toString();
+            } else if (errorObj is String) {
+              errorMsg = errorObj;
+            }
+          }
+        }
+
+        if (delivered) {
+          return TransactionResult(
+            success: !failed,
+            txid: txid,
+            error: errorMsg,
+            response: result,
+          );
+        }
+      } catch (e) {
+        // Transaction might not be indexed yet
+      }
+
+      await Future.delayed(pollInterval);
+    }
+
+    return TransactionResult(
+      success: false,
+      txid: txid,
+      error: "Timeout waiting for delivery",
+      response: null,
+    );
+  }
+
+  /// Sign, submit, and wait using a pre-built BuildContext
+  ///
+  /// Use this when you need full control over the BuildContext.
+  Future<TransactionResult> signSubmitAndWaitWithContext({
+    required BuildContext ctx,
+    required Map<String, dynamic> body,
+    VoteType? vote,
+    String? signatureMemo,
+    Uint8List? signatureData,
+    int maxAttempts = 30,
+    Duration pollInterval = const Duration(seconds: 2),
+  }) async {
+    final envelope = await signWithContext(
+      ctx: ctx,
+      body: body,
+      vote: vote,
+      signatureMemo: signatureMemo,
+      signatureData: signatureData,
+    );
+
+    final response = await _client.submit(envelope.toJson());
+
+    // Extract txid from response
+    String? txid;
+    if (response is List && response.isNotEmpty) {
+      if (response.length > 1) {
+        txid = response[1]?["status"]?["txID"]?.toString();
+      }
+      txid ??= response[0]?["status"]?["txID"]?.toString();
+    } else if (response is Map) {
+      txid = response["status"]?["txID"]?.toString();
+    }
+
+    if (txid == null) {
+      return TransactionResult(
+        success: false,
+        txid: null,
+        error: "No txid in response",
+        response: response,
+      );
+    }
+
+    // Extract just the hash for querying
+    String queryTxid = txid;
+    if (txid.startsWith("acc://") && txid.contains("@")) {
+      final hash = txid.split("@")[0].replaceAll("acc://", "");
+      queryTxid = "acc://$hash@unknown";
+    }
+
+    // Poll for delivery
+    for (int i = 0; i < maxAttempts; i++) {
+      try {
+        final result = await _client.rawCall("query", {
+          "scope": queryTxid,
+          "query": {"queryType": "default"}
+        });
+
+        final statusValue = result["status"];
+        bool delivered = false;
+        bool failed = false;
+        String? errorMsg;
+
+        if (statusValue is String) {
+          delivered = statusValue == "delivered";
+        } else if (statusValue is Map) {
           delivered = statusValue["delivered"] == true;
           failed = statusValue["failed"] == true;
           if (failed) {
