@@ -1,6 +1,6 @@
 name: opendlt_accumulate
 description: Production-ready Dart SDK for Accumulate blockchain. Multi-signature support (Ed25519, BTC, ETH, RSA, ECDSA), SmartSigner API, complete V2/V3 protocol.
-version: 2.0.2
+version: 2.1.0
 homepage: https://accumulatenetwork.io
 repository: https://github.com/opendlt/opendlt-dart-v2v3-sdk
 issue_tracker: https://github.com/opendlt/opendlt-dart-v2v3-sdk/issues

@@ -5,6 +5,16 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-27
+
+### Added
+- Binary encoding for BurnTokens, BurnCredits, WriteDataTo, LockAccount, UpdateKey, UpdateAccountAuth, and TransferCredits transaction types
+- `fromJson` factory on AccountAuthOperation and KeyPageOperation for deserialization
+- Testnet faucet example
+
+### Changed
+- Moved ad-hoc test/debug examples from `example/v3/` to `example/flows/`
+
 ## [2.0.2] - 2026-02-07
 
 ### Fixed
