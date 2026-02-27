@@ -24,6 +24,24 @@ abstract class AccountAuthOperation {
 
   /// Convert to JSON for API submission
   Map<String, dynamic> toJson();
+
+  /// Create an AccountAuthOperation from a JSON map
+  static AccountAuthOperation fromJson(Map<String, dynamic> json) {
+    final opType = json['type'] as String;
+    final authority = json['authority'] as String? ?? '';
+    switch (opType) {
+      case 'enable':
+        return EnableAccountAuthOperation(authority: authority);
+      case 'disable':
+        return DisableAccountAuthOperation(authority: authority);
+      case 'addAuthority':
+        return AddAccountAuthorityOperation(authority: authority);
+      case 'removeAuthority':
+        return RemoveAccountAuthorityOperation(authority: authority);
+      default:
+        throw ArgumentError('Unknown account auth operation type: $opType');
+    }
+  }
 }
 
 /// Enable authorization checking for an authority

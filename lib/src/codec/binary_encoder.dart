@@ -581,6 +581,20 @@ class TransactionBodyMarshaler {
         return _marshalCreateKeyBook(body, typeValue);
       case txTypeUpdateKeyPage:
         return _marshalUpdateKeyPage(body, typeValue);
+      case txTypeBurnTokens:
+        return _marshalBurnTokens(body, typeValue);
+      case txTypeBurnCredits:
+        return _marshalBurnCredits(body, typeValue);
+      case txTypeWriteDataTo:
+        return _marshalWriteDataTo(body, typeValue);
+      case txTypeLockAccount:
+        return _marshalLockAccount(body, typeValue);
+      case txTypeUpdateKey:
+        return _marshalUpdateKey(body, typeValue);
+      case txTypeUpdateAccountAuth:
+        return _marshalUpdateAccountAuth(body, typeValue);
+      case txTypeTransferCredits:
+        return _marshalTransferCredits(body, typeValue);
       default:
         throw ArgumentError(
             "Transaction type not yet supported for binary encoding: $type");
@@ -1142,6 +1156,220 @@ class TransactionBodyMarshaler {
         encoder.writeBytes(2, _hexToBytes(data));
       } else if (data is Uint8List) {
         encoder.writeBytes(2, data);
+      }
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal BurnTokens transaction body
+  /// Matches Go: protocol/types_gen.go BurnTokens.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: Amount (BigInt)
+  static Uint8List _marshalBurnTokens(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    if (body["amount"] != null) {
+      final amount = body["amount"];
+      BigInt amountValue;
+      if (amount is String) {
+        amountValue = BigInt.parse(amount);
+      } else if (amount is int) {
+        amountValue = BigInt.from(amount);
+      } else if (amount is BigInt) {
+        amountValue = amount;
+      } else {
+        throw ArgumentError("Amount must be String, int, or BigInt");
+      }
+      encoder.writeBigInt(2, amountValue);
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal BurnCredits transaction body
+  /// Matches Go: protocol/types_gen.go BurnCredits.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: Amount (uint)
+  static Uint8List _marshalBurnCredits(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    if (body["amount"] != null) {
+      final amount = body["amount"];
+      if (amount is int) {
+        encoder.writeUint(2, amount);
+      } else if (amount is String) {
+        encoder.writeUint(2, int.parse(amount));
+      }
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal WriteDataTo transaction body
+  /// Matches Go: protocol/types_gen.go WriteDataTo.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: Recipient (URL)
+  /// Field 3: Entry (nested DataEntry)
+  static Uint8List _marshalWriteDataTo(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    if (body["recipient"] != null) {
+      encoder.writeUrl(2, body["recipient"] as String);
+    }
+
+    if (body["entry"] != null || body["entries"] != null) {
+      final entry = body["entry"] ?? body["entries"];
+      final entryBytes = _marshalDataEntry(entry);
+      encoder.writeValue(3, entryBytes);
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal LockAccount transaction body
+  /// Matches Go: protocol/types_gen.go LockAccount.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: Height (uint)
+  static Uint8List _marshalLockAccount(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    if (body["height"] != null) {
+      final height = body["height"];
+      if (height is int) {
+        encoder.writeUint(2, height);
+      } else if (height is String) {
+        encoder.writeUint(2, int.parse(height));
+      }
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal UpdateKey transaction body
+  /// Matches Go: protocol/types_gen.go UpdateKey.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: NewKeyHash (bytes)
+  static Uint8List _marshalUpdateKey(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    final newKeyHash = body["newKeyHash"] ?? body["newKey"];
+    if (newKeyHash != null) {
+      if (newKeyHash is String) {
+        encoder.writeBytes(2, _hexToBytes(newKeyHash));
+      } else if (newKeyHash is Uint8List) {
+        encoder.writeBytes(2, newKeyHash);
+      }
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// AccountAuthOperationType enum values (from Go protocol)
+  static const accountAuthOpEnable = 1;
+  static const accountAuthOpDisable = 2;
+  static const accountAuthOpAddAuthority = 3;
+  static const accountAuthOpRemoveAuthority = 4;
+
+  /// Marshal UpdateAccountAuth transaction body
+  /// Matches Go: protocol/types_gen.go UpdateAccountAuth.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: Operations (repeated AccountAuthOperation, marshal-as: union)
+  static Uint8List _marshalUpdateAccountAuth(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    if (body["operations"] != null) {
+      final operations = body["operations"];
+      if (operations is List) {
+        for (final op in operations) {
+          final opBytes = _marshalAccountAuthOperation(op as Map<String, dynamic>);
+          encoder.writeValue(2, opBytes);
+        }
+      }
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal AccountAuthOperation (union type)
+  /// Field 1: Type (enum)
+  /// Field 2: Authority (URL)
+  static Uint8List _marshalAccountAuthOperation(Map<String, dynamic> op) {
+    final encoder = BinaryEncoder();
+
+    final typeStr = op["type"]?.toString().toLowerCase() ?? "";
+    int opType;
+
+    switch (typeStr) {
+      case "enable":
+        opType = accountAuthOpEnable;
+        break;
+      case "disable":
+        opType = accountAuthOpDisable;
+        break;
+      case "addauthority":
+        opType = accountAuthOpAddAuthority;
+        break;
+      case "removeauthority":
+        opType = accountAuthOpRemoveAuthority;
+        break;
+      default:
+        throw ArgumentError("Unknown account auth operation type: $typeStr");
+    }
+
+    encoder.writeEnum(1, opType);
+
+    if (op["authority"] != null) {
+      encoder.writeUrl(2, op["authority"] as String);
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal TransferCredits transaction body
+  /// Matches Go: protocol/types_gen.go TransferCredits.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: To (repeated CreditRecipient, marshal-as: reference)
+  static Uint8List _marshalTransferCredits(Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    // "to" is a list of CreditRecipient: [{url: ..., amount: ...}]
+    if (body["to"] != null) {
+      final to = body["to"];
+      if (to is List) {
+        for (final recipient in to) {
+          final recipientBytes = _marshalCreditRecipient(recipient as Map<String, dynamic>);
+          encoder.writeValue(2, recipientBytes);
+        }
+      }
+    }
+
+    return encoder.toBytes();
+  }
+
+  /// Marshal CreditRecipient
+  /// Field 1: Url (URL)
+  /// Field 2: Amount (uint)
+  static Uint8List _marshalCreditRecipient(Map<String, dynamic> recipient) {
+    final encoder = BinaryEncoder();
+
+    if (recipient["url"] != null) {
+      encoder.writeUrl(1, recipient["url"] as String);
+    }
+
+    if (recipient["amount"] != null) {
+      final amount = recipient["amount"];
+      if (amount is int) {
+        encoder.writeUint(2, amount);
+      } else if (amount is String) {
+        encoder.writeUint(2, int.parse(amount));
       }
     }
 

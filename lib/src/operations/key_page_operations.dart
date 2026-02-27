@@ -59,6 +59,41 @@ abstract class KeyPageOperation {
 
   /// Convert to JSON for API submission
   Map<String, dynamic> toJson();
+
+  /// Create a KeyPageOperation from a JSON map
+  static KeyPageOperation fromJson(Map<String, dynamic> json) {
+    final opType = json['type'] as String;
+    switch (opType) {
+      case 'add':
+        final entry = json['entry'] as Map<String, dynamic>?;
+        final key = entry?['keyHash'] as String? ?? json['key'] as String? ?? '';
+        return AddKeyOperation(entry: KeySpecParams.fromHex(key));
+      case 'remove':
+        final entry = json['entry'] as Map<String, dynamic>?;
+        final key = entry?['keyHash'] as String? ?? json['key'] as String? ?? '';
+        return RemoveKeyOperation(entry: KeySpecParams.fromHex(key));
+      case 'update':
+        final oldEntry = json['oldEntry'] as Map<String, dynamic>? ?? {};
+        final newEntry = json['newEntry'] as Map<String, dynamic>? ?? {};
+        return UpdateKeyOperation(
+          oldEntry: KeySpecParams.fromHex(oldEntry['keyHash'] as String? ?? ''),
+          newEntry: KeySpecParams.fromHex(newEntry['keyHash'] as String? ?? ''),
+        );
+      case 'setThreshold':
+        return SetThresholdKeyPageOperation(threshold: json['threshold'] as int);
+      case 'setRejectThreshold':
+        return SetRejectThresholdKeyPageOperation(threshold: json['threshold'] as int);
+      case 'setResponseThreshold':
+        return SetResponseThresholdKeyPageOperation(threshold: json['threshold'] as int);
+      case 'updateAllowed':
+        return UpdateAllowedKeyPageOperation(
+          allow: (json['allow'] as List?)?.cast<String>(),
+          deny: (json['deny'] as List?)?.cast<String>(),
+        );
+      default:
+        throw ArgumentError('Unknown key page operation type: $opType');
+    }
+  }
 }
 
 /// Add a key to the key page
