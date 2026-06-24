@@ -7,12 +7,14 @@
 // - Adding credits and sending tokens
 //
 // Updated to use Kermit public testnet and new SmartSigner API.
+import 'dart:io';
 import 'dart:async';
 import 'package:opendlt_accumulate/opendlt_accumulate.dart';
 
 // Kermit public testnet endpoints
-const String kermitV2 = "https://kermit.accumulatenetwork.io/v2";
-const String kermitV3 = "https://kermit.accumulatenetwork.io/v3";
+// Honor ACCUMULATE_V2_URL/V3_URL when set (mock/devnet harness); default to Kermit.
+final String kermitV2 = Platform.environment['ACCUMULATE_V2_URL'] ?? "https://kermit.accumulatenetwork.io/v2";
+final String kermitV3 = Platform.environment['ACCUMULATE_V3_URL'] ?? "https://kermit.accumulatenetwork.io/v3";
 
 // For local DevNet testing, uncomment these:
 // const String kermitV2 = "http://127.0.0.1:26660/v2";
