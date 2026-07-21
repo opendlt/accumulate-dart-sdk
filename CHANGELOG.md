@@ -5,6 +5,11 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-07-21
+
+### Changed
+- Documented ACME base-unit scaling (1 ACME = 1e8) in the README quickstart and clarified the dependency version pin.
+
 ## [2.1.0] - 2026-02-27
 
 ### Added
