@@ -1,0 +1,280 @@
+# Accumulate Dart SDK — Full API Digest
+
+Package `opendlt_accumulate` v2.1.2 (source commit 197e5bb). Generated from the Accumulate SDK manifest (single source of truth).
+
+## Install & import
+```
+dart pub add opendlt_accumulate
+```
+`import 'package:opendlt_accumulate/opendlt_accumulate.dart';`
+
+## Conventions (read first)
+- Networks: Kermit testnet (used by the examples; fund via faucet), plus mainnet and local devnet.
+- Amounts: ACME is denominated in base units where 1 ACME = 1e8 base units. Passing whole ACME as-is is the single most common integration bug.
+- Credits: buying credits uses the network oracle price; an ADI/key page must hold credits before it can sign transactions.
+- Golden path: connect -> build a body with TxBody.<op>(...) -> sign+submit+wait with SmartSigner -> query to confirm.
+
+## Entry points
+- **Accumulate** (class, `package:opendlt_accumulate/opendlt_accumulate.dart`) — Main client with factory methods for network connection
+- **TxBody** (class, `package:opendlt_accumulate/opendlt_accumulate.dart`) — Static methods that build transaction body objects
+- **SmartSigner** (class, `package:opendlt_accumulate/opendlt_accumulate.dart`) — Signs, submits, and waits for transaction results
+- **Ed25519KeyPair** (class, `package:opendlt_accumulate/opendlt_accumulate.dart`) — Ed25519 key pair generation and derivation
+- **UnifiedKeyPair** (class, `package:opendlt_accumulate/opendlt_accumulate.dart`) — Wrapper for different key pair types
+- **NetworkEndpoint** (class, `package:opendlt_accumulate/opendlt_accumulate.dart`) — Network endpoint enumeration
+
+## Operations (24)
+
+### generate_keys  —  Generate Keys  [utility]
+Symbols:
+  - `Ed25519KeyPair.generate` — `static Future<Ed25519KeyPair> generate()`
+  - `Ed25519KeyPair.deriveLiteIdentityUrl` — `Future<String> deriveLiteIdentityUrl()`
+  - `Ed25519KeyPair.deriveLiteTokenAccountUrl` — `Future<String> deriveLiteTokenAccountUrl()`
+Outputs:
+  - `keypair` (Ed25519KeyPair)
+  - `liteIdentity` (String)
+  - `liteTokenAccount` (String)
+Examples: examples/generate_keys.dart
+
+### faucet  —  Faucet  [utility]
+Symbols:
+  - `Accumulate.faucet` — `Future<void> faucet(String account)`
+Inputs:
+  - `account` (String, required)
+  - `times` (int, optional)
+Requires: keypair
+Examples: examples/faucet.dart
+
+### wait_for_balance  —  Wait For Balance  [utility]
+Symbols:
+  - `Accumulate.v3.query` — `Future<Map<String, dynamic>> query(String url)`
+Inputs:
+  - `account` (String, required)
+  - `minBalance` (String, required)
+Outputs:
+  - `balance` (BigInt)
+Requires: keypair
+Examples: examples/wait_for_balance.dart
+
+### wait_for_credits  —  Wait For Credits  [utility]
+Symbols:
+  - `Accumulate.v3.query` — `Future<Map<String, dynamic>> query(String url)`
+Inputs:
+  - `account` (String, required)
+  - `minCredits` (int, required)
+Outputs:
+  - `credits` (int)
+Requires: keypair
+Examples: examples/wait_for_credits.dart
+
+### add_credits  —  Add Credits  [credits]
+Symbols:
+  - `TxBody.addCredits` — `static Map<String, dynamic> addCredits({required String recipient, required String amount, required dynamic oracle})`
+  - `SmartSigner.signSubmitAndWait` — `Future<dynamic> signSubmitAndWait({required String principal, required Map<String, dynamic> body})`
+Inputs:
+  - `recipient` (String, required)
+  - `amount` (String, required)
+  - `oracle` (dynamic, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/add_credits.dart
+
+### transfer_credits  —  Transfer Credits  [credits]
+Symbols:
+  - `TxBody.transferCredits` — `static Map<String, dynamic> transferCredits({required String recipient, required int amount})`
+Inputs:
+  - `recipient` (String, required)
+  - `amount` (int, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/transfer_credits.dart
+
+### burn_credits  —  Burn Credits  [credits]
+Symbols:
+  - `TxBody.burnCredits` — `static Map<String, dynamic> burnCredits({required int amount})`
+Inputs:
+  - `amount` (int, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/burn_credits.dart
+
+### create_identity  —  Create Identity  [identity]
+Symbols:
+  - `TxBody.createIdentity` — `static Map<String, dynamic> createIdentity({required String url, required String keyBookUrl})`
+  - `SmartSigner.signSubmitAndWait` — `Future<dynamic> signSubmitAndWait({required String principal, required Map<String, dynamic> body})`
+Inputs:
+  - `url` (String, required)
+  - `keyBookUrl` (String, required)
+Outputs:
+  - `adiUrl` (String)
+  - `keyBookUrl` (String)
+Requires: keypair, credits
+Examples: examples/create_identity.dart
+
+### create_key_book  —  Create Key Book  [identity]
+Symbols:
+  - `TxBody.createKeyBook` — `static Map<String, dynamic> createKeyBook({required String url, String? publicKeyHash})`
+Inputs:
+  - `url` (String, required)
+  - `publicKeyHash` (String, optional)
+Outputs:
+  - `keyBookUrl` (String)
+Requires: keypair, credits
+Examples: examples/create_key_book.dart
+
+### create_key_page  —  Create Key Page  [identity]
+Symbols:
+  - `TxBody.createKeyPage` — `static Map<String, dynamic> createKeyPage({required String url, required List<String> keys})`
+Inputs:
+  - `url` (String, required)
+  - `keys` (List<String>, required)
+Outputs:
+  - `keyPageUrl` (String)
+Requires: keypair, credits
+Examples: examples/create_key_page.dart
+
+### create_token_account  —  Create Token Account  [account]
+Symbols:
+  - `TxBody.createTokenAccount` — `static Map<String, dynamic> createTokenAccount({required String url, required String tokenUrl})`
+Inputs:
+  - `url` (String, required)
+  - `tokenUrl` (String, required)
+Outputs:
+  - `tokenAccountUrl` (String)
+Requires: keypair, credits
+Examples: examples/create_token_account.dart
+
+### create_data_account  —  Create Data Account  [account]
+Symbols:
+  - `TxBody.createDataAccount` — `static Map<String, dynamic> createDataAccount({required String url})`
+Inputs:
+  - `url` (String, required)
+Outputs:
+  - `dataAccountUrl` (String)
+Requires: keypair, credits
+Examples: examples/create_data_account.dart
+
+### create_token  —  Create Token  [account]
+Symbols:
+  - `TxBody.createToken` — `static Map<String, dynamic> createToken({required String url, required String symbol, required int precision, String? supplyLimit})`
+Inputs:
+  - `url` (String, required)
+  - `symbol` (String, required)
+  - `precision` (int, required)
+  - `supplyLimit` (String, optional)
+Outputs:
+  - `tokenUrl` (String)
+Requires: keypair, credits
+Examples: examples/create_token.dart
+
+### create_lite_token_account  —  Create Lite Token Account  [account]
+Symbols:
+  - `Ed25519KeyPair.deriveLiteTokenAccountUrl` — `Future<String> deriveLiteTokenAccountUrl()`
+Outputs:
+  - `liteTokenAccountUrl` (String)
+Requires: keypair
+Examples: examples/create_lite_token_account.dart
+
+### send_tokens  —  Send Tokens  [transaction]
+Symbols:
+  - `TxBody.sendTokensSingle` — `static Map<String, dynamic> sendTokensSingle({required String toUrl, required String amount})`
+  - `TxBody.sendTokens` — `static Map<String, dynamic> sendTokens({required List<TokenRecipient> recipients})`
+Inputs:
+  - `recipients` (List<TokenRecipient>, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/send_tokens.dart
+
+### issue_tokens  —  Issue Tokens  [transaction]
+Symbols:
+  - `TxBody.issueTokens` — `static Map<String, dynamic> issueTokens({required String recipient, required String amount})`
+Inputs:
+  - `recipient` (String, required)
+  - `amount` (String, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/issue_tokens.dart
+
+### burn_tokens  —  Burn Tokens  [transaction]
+Symbols:
+  - `TxBody.burnTokens` — `static Map<String, dynamic> burnTokens({required String amount})`
+Inputs:
+  - `amount` (String, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/burn_tokens.dart
+
+### write_data  —  Write Data  [transaction]
+Symbols:
+  - `TxBody.writeData` — `static Map<String, dynamic> writeData({required List<String> entriesHex})`
+Inputs:
+  - `entries` (List<String>, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/write_data.dart
+
+### write_data_to  —  Write Data To  [transaction]
+Symbols:
+  - `TxBody.writeDataTo` — `static Map<String, dynamic> writeDataTo({required String recipient, required List<String> entriesHex})`
+Inputs:
+  - `recipient` (String, required)
+  - `entries` (List<String>, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/write_data_to.dart
+
+### query_account  —  Query Account  [query]
+Symbols:
+  - `Accumulate.v3.query` — `Future<Map<String, dynamic>> query(String url)`
+Inputs:
+  - `url` (String, required)
+Outputs:
+  - `account` (Map<String, dynamic>)
+Examples: examples/query_account.dart
+
+### update_key_page  —  Update Key Page  [authority]
+Symbols:
+  - `TxBody.updateKeyPage` — `static Map<String, dynamic> updateKeyPage({required List<Map<String, dynamic>> operations})`
+Inputs:
+  - `operations` (List<Map<String, dynamic>>, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/update_key_page.dart
+
+### update_key  —  Update Key  [authority]
+Symbols:
+  - `TxBody.updateKey` — `static Map<String, dynamic> updateKey({required String newKey})`
+Inputs:
+  - `newKey` (String, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/update_key.dart
+
+### lock_account  —  Lock Account  [authority]
+Symbols:
+  - `TxBody.lockAccount` — `static Map<String, dynamic> lockAccount({required int height})`
+Inputs:
+  - `height` (int, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/lock_account.dart
+
+### update_account_auth  —  Update Account Auth  [authority]
+Symbols:
+  - `TxBody.updateAccountAuth` — `static Map<String, dynamic> updateAccountAuth({required List<Map<String, dynamic>> operations})`
+Inputs:
+  - `operations` (List<Map<String, dynamic>>, required)
+Outputs:
+  - `txHash` (String)
+Requires: keypair, credits
+Examples: examples/update_account_auth.dart
