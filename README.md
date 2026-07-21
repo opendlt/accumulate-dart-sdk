@@ -19,8 +19,10 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  opendlt_accumulate: ^2.0.0
+  opendlt_accumulate: ^2.1.0
 ```
+
+> **Amount scaling (read this first):** ACME amounts are passed as strings in **base units**, where **1 ACME = 1e8 base units** (so `"100000000"` is 1 ACME). Getting the 1e8 scaling wrong is the single most common integration bug.
 
 ## Quick Start
 
