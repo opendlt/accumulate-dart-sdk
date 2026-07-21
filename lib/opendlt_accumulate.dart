@@ -4,6 +4,9 @@ library opendlt_accumulate;
 export 'src/facade/accumulate.dart' show Accumulate, AccumulateV2, AccumulateV3;
 export 'src/core/options.dart' show AccumulateOptions;
 
+// ACME amount helpers (1 ACME = 1e8 base units)
+export 'src/amounts.dart' show Amount, acmeBaseUnits, acmePrecision;
+
 // Runtime utilities
 export 'src/runtime/bytes.dart';
 export 'src/runtime/url.dart';
