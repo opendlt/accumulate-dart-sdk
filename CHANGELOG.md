@@ -5,6 +5,16 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-07-22
+
+### Added
+- `Amount` helper for ACME base-unit scaling (1 ACME = 1e8 base units): `Amount.acme()`, `Amount.baseUnitsOf()`, `Amount.credits()`.
+- Typed error taxonomy (`AccError` and subclasses) exported from the package root.
+
+### Changed
+- RPC errors from the live API path now surface as typed `AccError` (via `Transport`), so callers can `catch (ValidationError)` / `catch (ApiError)` instead of a flat `JsonRpcException`.
+- Added generated `llms.txt`, `llms-full.txt`, and `AGENTS.md` AI-agent interface files.
+
 ## [2.1.2] - 2026-07-21
 
 ### Changed

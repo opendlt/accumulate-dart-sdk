@@ -1,6 +1,6 @@
 # Accumulate Dart SDK — Full API Digest
 
-Package `opendlt_accumulate` v2.1.2 (source commit 197e5bb). Generated from the Accumulate SDK manifest (single source of truth).
+Package `opendlt_accumulate` v2.2.0 (source commit 197e5bb). Generated from the Accumulate SDK manifest (single source of truth).
 
 ## Install & import
 ```

@@ -1,6 +1,6 @@
 # Accumulate Dart SDK
 
-> Build on the Accumulate blockchain from Dart. Package: `opendlt_accumulate` (v2.1.2).
+> Build on the Accumulate blockchain from Dart. Package: `opendlt_accumulate` (v2.2.0).
 
 ## Install
 ```
