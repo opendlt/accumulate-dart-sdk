@@ -14,6 +14,22 @@ export 'src/runtime/validate.dart';
 export 'src/util/acc_url.dart';
 export 'src/util/bytes.dart' show toHex, hexTo, fromHex, bytesToBigInt, bigIntToBytes, deriveLiteIdentityFromKeyHash;
 export 'src/util/validation.dart' show ValidationException;
+
+// Typed error taxonomy (thrown by the live API path via Transport)
+export 'src/generated/runtime/errors.dart'
+    show
+        AccError,
+        ApiError,
+        AuthError,
+        DepthError,
+        EncodingError,
+        NetworkError,
+        SignatureError,
+        TransactionError,
+        ValidationError,
+        ErrorRegistry,
+        AccErrors,
+        JsonRpcErrorMapper;
 export 'src/util/response_parser.dart';
 
 // Enums (from Stage 1) - hide types that are redefined in operations files

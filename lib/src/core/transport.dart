@@ -7,6 +7,7 @@ import "dart:async";
 import "dart:io";
 import "package:http/http.dart" as http;
 import "../generated/api/json_rpc_client.dart" as gen; // keep generated internal
+import "../generated/runtime/errors.dart" show JsonRpcErrorMapper, AccError;
 import "options.dart";
 
 /// Hardened transport wrapper over generated JsonRpcClient.
@@ -46,11 +47,32 @@ class Transport {
   }
 
   Future<dynamic> call(String method, [dynamic params]) async {
-    return _withRetry(() => _inner.call(method, params));
+    try {
+      return await _withRetry(() => _inner.call(method, params));
+    } on gen.JsonRpcException catch (e) {
+      throw _mapRpc(e);
+    }
   }
 
   Future<List<dynamic>> batch(List<gen.JsonRpcRequest> requests) async {
-    return _withRetry(() => _inner.batch(requests));
+    try {
+      return await _withRetry(() => _inner.batch(requests));
+    } on gen.JsonRpcException catch (e) {
+      throw _mapRpc(e);
+    }
+  }
+
+  /// Map a low-level JSON-RPC exception to the typed [AccError] taxonomy, so
+  /// callers can `catch (ValidationError)` / `catch (ApiError)` etc. instead of
+  /// pattern-matching on a flat exception. (Wires the previously-unused
+  /// JsonRpcErrorMapper into the live path.)
+  AccError _mapRpc(gen.JsonRpcException e) {
+    final data = e.data is Map<String, dynamic> ? e.data as Map<String, dynamic> : null;
+    return JsonRpcErrorMapper.mapRpcError({
+      "code": e.code,
+      "message": e.message,
+      "data": data,
+    });
   }
 
   void close() => _inner.close();
