@@ -5,6 +5,12 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2026-07-28
+
+### Fixed
+- Removed a stray `example/v3/110_testnet_faucet.dart` left behind by an earlier move to `example/flows/`. It imported a `config.dart` that only exists in `example/flows/`, so it was the sole source of two analyzer errors — which is what earned the package pub.dev's `has:error` tag and degraded static analysis for every consumer. `dart analyze` now reports 0 errors.
+- Normalized `LICENSE` to LF line endings so pub.dev's license detector can match the Apache-2.0 text (previously reported as `license:unknown`).
+
 ## [2.2.1] - 2026-07-28
 
 ### Fixed
