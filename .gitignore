@@ -2,7 +2,14 @@
 .dart_tool/
 .packages
 pubspec.lock
-build/
+# Anchored to the repo root ON PURPOSE. An unanchored `build/` also matches
+# lib/src/build/ — the SDK's own source directory — which silently excluded
+# builders.dart, context.dart and tx_types.dart from git and therefore from the
+# published archive. The result: `import 'package:opendlt_accumulate/
+# opendlt_accumulate.dart'` did not compile for any consumer of 2.2.0, because
+# the umbrella library re-exports files that were not shipped.
+/build/
+!lib/src/build/
 coverage/
 
 # Generated API documentation (use `dart doc` to regenerate)
