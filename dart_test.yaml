@@ -1,0 +1,52 @@
+# Test configuration for the Accumulate Dart SDK.
+#
+# This file must live next to pubspec.yaml (the package root). A copy at the
+# repository root is never read by `dart test`, which is why quarantined and
+# network-dependent tests previously ran — and failed — on a default run.
+#
+# Tag selectors (`include_tags` / `exclude_tags`) are boolean expression
+# STRINGS, not lists. The earlier list form (`["unit"]`) made the whole file
+# invalid, so no configuration applied at all.
+#
+# Tags come from `@Tags([...])` annotations at the top of each test file; there
+# is no path-based tagging key in dart_test.yaml.
+
+tags:
+  # Fast, isolated tests of individual components.
+  unit:
+    description: "Unit tests for individual components and functions"
+
+  # Validate against specifications, schemas and golden vectors.
+  conformance:
+    description: "Conformance tests against specs, schemas, and standards"
+
+  # Require a reachable network (local DevNet or a testnet). Skipped by default
+  # so a plain `dart test` is deterministic and offline-safe; run them with
+  # `dart test --tags integration` once a node is up.
+  integration:
+    description: "Integration tests with external services and networks"
+    timeout: "5m"
+    skip: "needs a reachable node — run explicitly: dart test --tags integration"
+
+  # Experimental or known-broken tests, excluded from normal runs.
+  quarantine:
+    description: "Quarantined tests - experimental or temporarily broken"
+    skip: "quarantined — run explicitly: dart test --tags quarantine"
+
+timeout: "2m"
+reporter: "expanded"
+test_on: "vm"
+
+presets:
+  # Fast unit tests only.
+  fast:
+    include_tags: "unit"
+
+  # Conformance validation only.
+  conformance:
+    include_tags: "conformance"
+
+  # Network suite; the preset overrides the default skip above.
+  integration:
+    include_tags: "integration"
+    timeout: "10m"

@@ -1,3 +1,6 @@
+@Tags(['integration'])
+library;
+
 import 'package:test/test.dart';
 import 'dart:io';
 

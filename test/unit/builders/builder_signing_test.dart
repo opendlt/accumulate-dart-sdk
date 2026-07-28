@@ -87,8 +87,12 @@ void main() {
 
       final header = envelope.transaction["header"];
       expect(header["principal"], equals(ctx.principal));
-      expect(header["timestamp"], equals(ctx.timestamp));
       expect(header["memo"], equals(ctx.memo));
+      // The timestamp belongs to the SIGNATURE, not the transaction header.
+      // TransactionHeader is Principal/Initiator/Memo/Metadata/Expire/
+      // HoldUntil/Authorities — the protocol has no header timestamp, and the
+      // signature's timestamp is asserted above.
+      expect(header.containsKey("timestamp"), isFalse);
 
       final txBody = envelope.transaction["body"];
       expect(txBody["type"], equals("sendTokens"));

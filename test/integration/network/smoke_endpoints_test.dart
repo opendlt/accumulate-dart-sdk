@@ -1,3 +1,6 @@
+@Tags(['integration'])
+library;
+
 import "package:test/test.dart";
 import "package:opendlt_accumulate/opendlt_accumulate.dart";
 

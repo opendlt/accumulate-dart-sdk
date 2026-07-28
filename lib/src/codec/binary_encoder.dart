@@ -1139,6 +1139,36 @@ class TransactionBodyMarshaler {
 
     encoder.writeEnum(1, dataEntryType);
 
+    // `_marshalWriteData` accepts either `entry` (a Map) or `entries` (a List of
+    // entry Maps). Without this branch a List fell through every check below, so
+    // the body marshalled to just the type enum — a WriteData carrying NO data,
+    // signed and submitted as though it were valid.
+    if (entry is List) {
+      for (final e in entry) {
+        if (e is Map && e["data"] != null) {
+          final d = e["data"];
+          if (d is String) {
+            encoder.writeBytes(2, _hexToBytes(d));
+          } else if (d is Uint8List) {
+            encoder.writeBytes(2, d);
+          } else if (d is List) {
+            for (final item in d) {
+              if (item is String) {
+                encoder.writeBytes(2, _hexToBytes(item));
+              } else if (item is Uint8List) {
+                encoder.writeBytes(2, item);
+              }
+            }
+          }
+        } else if (e is String) {
+          encoder.writeBytes(2, _hexToBytes(e));
+        } else if (e is Uint8List) {
+          encoder.writeBytes(2, e);
+        }
+      }
+      return encoder.toBytes();
+    }
+
     // Handle the data field - can be a List of hex strings or single hex string
     if (entry is Map && entry["data"] != null) {
       final data = entry["data"];

@@ -1,3 +1,6 @@
+@Tags(['quarantine'])
+library;
+
 import 'package:test/test.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;

@@ -485,7 +485,7 @@ void main() {
       test("marshals WriteData transaction with entry", () {
         final bytes = TransactionBodyMarshaler.marshal({
           "type": "writeData",
-          "entry": {"data": "SGVsbG8gV29ybGQ="}, // base64 "Hello World"
+          "entry": {"data": "48656c6c6f20576f726c64"}, // hex "Hello World" — writeData takes hex-encoded entries
         });
 
         expect(bytes[0], equals(0x01)); // field 1 (type)
@@ -495,7 +495,7 @@ void main() {
       test("marshals WriteData with writeToState", () {
         final bytes = TransactionBodyMarshaler.marshal({
           "type": "writeData",
-          "entry": {"data": "SGVsbG8gV29ybGQ="},
+          "entry": {"data": "48656c6c6f20576f726c64"},
           "writeToState": true,
         });
 
@@ -506,8 +506,8 @@ void main() {
         final bytes = TransactionBodyMarshaler.marshal({
           "type": "writeData",
           "entries": [
-            {"data": "SGVsbG8="},
-            {"data": "V29ybGQ="},
+            {"data": "48656c6c6f"},
+            {"data": "576f726c64"},
           ],
         });
 
