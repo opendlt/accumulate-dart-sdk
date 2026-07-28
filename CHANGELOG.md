@@ -5,6 +5,15 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-07-28
+
+### Fixed
+- **The umbrella library shadowed `dart:core`'s `Object`.** The Accumulate protocol defines a type named `Object` (account type/chains/pending) and the generator emits it verbatim; exporting it meant ordinary Dart such as `Object o = 'x';` failed to compile in any file that imported this package (`A value of type 'String' can't be assigned to a variable of type 'Object'`). The generated `Object` is now hidden from the umbrella and re-exported as `ProtocolObject`, so nothing is lost and `dart:core` behaves normally.
+
+  The alias lives in the hand-maintained `lib/src/protocol_aliases.dart` rather than in `lib/src/generated/`, which the generator overwrites — a rename applied there would be silently reverted on the next regeneration.
+
+  Checked for the same class of collision across the package: `Duration` (`core_types.dart`) and `Record` (`api.dart`) also shadow `dart:core` names but are not reachable from the umbrella export, so they do not affect consumers.
+
 ## [2.3.0] - 2026-07-28
 
 ### Added

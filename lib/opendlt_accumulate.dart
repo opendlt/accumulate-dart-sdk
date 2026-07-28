@@ -69,7 +69,12 @@ export 'src/api/client.dart';
 export 'src/generated/runtime/canon_helpers.dart';
 export 'src/generated/runtime/validators.dart';
 export 'src/generated/types/accounts_types.dart';
-export 'src/generated/types/general_types.dart';
+// The protocol defines a type named `Object`, which the generator emits
+// verbatim. Exporting it shadowed `dart:core`'s `Object` for every consumer:
+// `Object o = 'x';` failed to compile purely because this package was imported.
+// Hidden here and re-exported as `ProtocolObject` from src/protocol_aliases.dart.
+export 'src/generated/types/general_types.dart' hide Object;
+export 'src/protocol_aliases.dart';
 export 'src/generated/types/synthetic_transactions_types.dart';
 export 'src/generated/types/system_types.dart';
 export 'src/generated/types/transaction_types.dart' hide Transaction, TransactionHeader;
