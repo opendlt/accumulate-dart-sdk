@@ -12,6 +12,8 @@
 /// ```
 library;
 
+import 'dart:math' as math;
+
 /// Number of decimal places in ACME (1 ACME = 10^[acmePrecision] base units).
 const int acmePrecision = 8;
 
@@ -41,6 +43,30 @@ class Amount {
     return Amount(BigInt.parse(units.toString()));
   }
 
+  /// Create from whole units of a **custom token** with the given [precision].
+  ///
+  /// Custom tokens declare their own precision at creation; the wire format is
+  /// always base units. `Amount.token(1000, 8)` is 1000 whole tokens =
+  /// `100000000000` base units.
+  ///
+  /// Without this the only options are hand-computing a power of ten or passing
+  /// a raw base-unit string, and both are routinely got wrong: issuing `1000`
+  /// against a precision-8 token mints `0.00001` tokens, not 1000 — and the
+  /// transaction succeeds either way, so the mistake is silent.
+  ///
+  /// ```dart
+  /// Amount.token(1000, 8).toWire(); // '100000000000'
+  /// Amount.token(100, 2).toWire();  // '10000'
+  /// Amount.token(1000, 0).toWire(); // '1000'
+  /// ```
+  factory Amount.token(num wholeTokens, int precision) {
+    final scale = BigInt.from(10).pow(precision);
+    if (wholeTokens is int) {
+      return Amount(BigInt.from(wholeTokens) * scale);
+    }
+    return Amount(BigInt.from((wholeTokens * math.pow(10, precision)).round()));
+  }
+
   /// ACME base units needed to buy [creditCount] credits at [oraclePrice]
   /// (the integer oracle value from the network oracle query).
   factory Amount.credits(int creditCount, int oraclePrice) {
@@ -54,6 +80,13 @@ class Amount {
 
   /// The amount expressed in whole ACME.
   double toAcme() => baseUnits / acmeBaseUnits;
+
+  /// The amount in whole units of a token with the given [precision].
+  ///
+  /// ```dart
+  /// Amount.baseUnitsOf('100000000000').toToken(8); // 1000.0
+  /// ```
+  double toToken(int precision) => baseUnits / BigInt.from(10).pow(precision);
 
   @override
   String toString() => toWire();

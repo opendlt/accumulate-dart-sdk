@@ -5,6 +5,14 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-07-28
+
+### Added
+- `Amount.token(whole, precision)` / `toToken(precision)` for **custom tokens**. Custom tokens declare their own precision at creation; the wire format is always base units. Previously `Amount` covered only ACME and credits, so issuing a custom token meant hand-computing a power of ten — and issuing `1000` against a precision-8 token mints `0.00001` tokens, not 1000, while the transaction succeeds either way.
+
+### Changed
+- Fleet version alignment: all five Accumulate SDKs now ship 2.3.0 with the same `Amount` surface.
+
 ## [2.2.2] - 2026-07-28
 
 ### Fixed
