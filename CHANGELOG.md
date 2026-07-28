@@ -5,6 +5,13 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-07-28
+
+### Fixed
+- **WriteData silently dropped its payload when given `entries`.** `_marshalWriteData` accepts either `entry` (a Map) or `entries` (a List), but `_marshalDataEntry` only handled the Map form — a List fell through every branch, so the body marshalled to just the type enum and produced a WriteData carrying no data, signed and submitted as though valid.
+- Test-suite correctness: WriteData conformance tests passed base64 where the documented contract is hex (`builders.writeData` takes `entriesHex`), and a builder test asserted a `timestamp` on the transaction header — the protocol puts the timestamp on the signature, not the header.
+- `dart_test.yaml` now lives at the package root and uses valid string tag selectors. It previously sat at the repository root (never read by `dart test`) and used list-form selectors, which made the file invalid — so quarantined and network-dependent tests ran, and failed, on a default `dart test`.
+
 ## [2.3.1] - 2026-07-28
 
 ### Fixed
