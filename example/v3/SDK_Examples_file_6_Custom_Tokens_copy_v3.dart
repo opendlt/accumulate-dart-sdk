@@ -270,16 +270,21 @@ Future<void> testFeatures() async {
     // =========================================================
     print("--- Step 8: Issue Custom Tokens ---\n");
 
-    int issueAmount = 100000; // 10.0000 MYTKN (4 decimal precision)
-    print("Issuing $issueAmount tokens to $tokenAccount1Url");
+    // IssueTokens takes BASE UNITS on the wire. Convert from whole tokens with
+    // Amount.token rather than writing the base-unit literal by hand: passing
+    // `10` here would mint 0.0010 MYTKN, and the transaction would succeed
+    // while being 10,000x off what was intended.
+    const int issueWhole = 10;
+    final String issueAmount = Amount.token(issueWhole, precision).toWire();
+    print("Issuing $issueWhole MYTKN ($issueAmount base units at precision $precision) to $tokenAccount1Url");
 
     final issueResult = await adiSigner.signSubmitAndWait(
       principal: customTokenUrl,
       body: TxBody.issueTokensSingle(
         toUrl: tokenAccount1Url,
-        amount: issueAmount.toString(),
+        amount: issueAmount,
       ),
-      memo: "Issue $issueAmount tokens",
+      memo: "Issue $issueWhole MYTKN",
       maxAttempts: 30,
     );
 
@@ -297,14 +302,16 @@ Future<void> testFeatures() async {
     // =========================================================
     print("--- Step 9: Send Custom Tokens ---\n");
 
-    int sendAmount = 25000; // 2.5000 MYTKN
-    print("Sending $sendAmount tokens from $tokenAccount1Url to $tokenAccount2Url");
+    // Same rule as issuance: the wire amount is base units, so convert.
+    const double sendWhole = 2.5;
+    final String sendAmount = Amount.token(sendWhole, precision).toWire();
+    print("Sending $sendWhole MYTKN ($sendAmount base units) from $tokenAccount1Url to $tokenAccount2Url");
 
     final sendResult = await adiSigner.signSubmitAndWait(
       principal: tokenAccount1Url,
       body: TxBody.sendTokensSingle(
         toUrl: tokenAccount2Url,
-        amount: sendAmount.toString(),
+        amount: sendAmount,
       ),
       memo: "Send custom tokens",
       maxAttempts: 30,
@@ -327,8 +334,8 @@ Future<void> testFeatures() async {
     print("Token Account 1: $tokenAccount1Url");
     print("Token Account 2: $tokenAccount2Url");
     print("\nOperations:");
-    print("  - Issued $issueAmount tokens to Account 1");
-    print("  - Transferred $sendAmount tokens to Account 2");
+    print("  - Issued $issueWhole MYTKN to Account 1");
+    print("  - Transferred $sendWhole MYTKN to Account 2");
     print("\nUsed SmartSigner API for all transactions!");
 
   } finally {

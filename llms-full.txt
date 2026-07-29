@@ -1,6 +1,6 @@
 # Accumulate Dart SDK — Full API Digest
 
-Package `opendlt_accumulate` v2.3.3 (source commit 197e5bb). Generated from the Accumulate SDK manifest (single source of truth).
+Package `opendlt_accumulate` v2.3.4 (source commit 197e5bb). Generated from the Accumulate SDK manifest (single source of truth).
 
 ## Install & import
 ```
@@ -12,6 +12,7 @@ dart pub add opendlt_accumulate
 - Networks: Kermit testnet (used by the examples; fund via faucet), plus mainnet and local devnet.
 - Amounts: ACME is denominated in base units where 1 ACME = 1e8 base units. Passing whole ACME as-is is the single most common integration bug.
 - Credits: buying credits uses the network oracle price; an ADI/key page must hold credits before it can sign transactions.
+- Custom tokens: each declares its own precision at creation (not 1e8). Amounts on the wire are always base units, so issuing 1000 against a precision-8 token mints 0.00001 tokens. Use the SDK amount helper to convert whole tokens to base units.
 - Golden path: connect -> build a body with TxBody.<op>(...) -> sign+submit+wait with SmartSigner -> query to confirm.
 
 ## Entry points

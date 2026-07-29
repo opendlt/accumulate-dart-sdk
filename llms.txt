@@ -1,6 +1,6 @@
 # Accumulate Dart SDK
 
-> Build on the Accumulate blockchain from Dart. Package: `opendlt_accumulate` (v2.3.3).
+> Build on the Accumulate blockchain from Dart. Package: `opendlt_accumulate` (v2.3.4).
 
 ## Install
 ```
@@ -18,6 +18,7 @@ final r = await SmartSigner(signer).signSubmitAndWait(principal, body);
 
 ## Rules
 - **Amounts:** 1 ACME = 1e8 base units. Never pass whole ACME as-is; use the `Amount` helper.
+- **Custom tokens have their OWN precision**, set when the token is created — it is not 1e8. Issuing `1000` against a precision-8 token mints `0.00001` tokens, not 1000, and the transaction succeeds either way. Convert with the token helper (`Amount.token(whole, precision)` / `Amount::token` / `Amount.Token`) rather than passing a raw number.
 - **Testnet first:** target Kermit and fund lite accounts via the faucet before spending.
 - **Prerequisites matter:** create an ADI, then buy credits for its key page before it can sign; wait for balances/credits to settle before the next step.
 - **Errors are typed:** branch on the SDK error type/code; retry only on network errors, not validation errors.

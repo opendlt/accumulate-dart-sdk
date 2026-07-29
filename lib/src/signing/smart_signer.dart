@@ -36,6 +36,51 @@ import "unified_keypair.dart";
 ///   body: TxBody.sendTokensSingle(toUrl: "acc://recipient.acme/tokens", amount: "1000000"),
 /// );
 /// ```
+
+/// Detect a submit-time rejection in a V3 `submit` response.
+///
+/// The network can accept the envelope transport-wise while REJECTING the
+/// transaction, returning a per-submission `status` carrying an error (e.g.
+/// `unauthorized`). Extracting only `txID` and proceeding to poll meant a
+/// rejection surfaced as a timeout with no reason attached — the actionable
+/// error was discarded at the moment it arrived.
+String? _extractSubmitError(dynamic response) {
+  String? fromEntry(dynamic entry) {
+    if (entry is! Map) return null;
+    final status = entry["status"];
+    if (status is Map) {
+      if (status["failed"] == true) {
+        final err = status["error"];
+        if (err is Map && err["message"] != null) return err["message"].toString();
+        if (err != null) return err.toString();
+        return "transaction rejected at submit";
+      }
+      final err = status["error"];
+      if (err != null) {
+        if (err is Map) {
+          final msg = err["message"]?.toString() ?? "transaction rejected at submit";
+          final code = err["code"] != null ? " (${err["code"]})" : "";
+          return "$msg$code";
+        }
+        return err.toString();
+      }
+    }
+    if (entry["success"] == false) {
+      return entry["message"]?.toString() ?? "submit reported success=false";
+    }
+    return null;
+  }
+
+  if (response is List) {
+    for (final e in response) {
+      final err = fromEntry(e);
+      if (err != null) return err;
+    }
+    return null;
+  }
+  return fromEntry(response);
+}
+
 class SmartSigner {
   final AccumulateV3 _client;
   final UnifiedKeyPair _keypair;
@@ -288,6 +333,17 @@ class SmartSigner {
 
     final response = await _client.submit(envelope.toJson());
 
+    // Surface a submit-time rejection immediately rather than polling to a
+    // bare timeout.
+    final submitError = _extractSubmitError(response);
+    if (submitError != null) {
+      return TransactionResult(
+        success: false,
+        txid: null,
+        error: 'Transaction rejected at submit: $submitError',
+      );
+    }
+
     // Extract txid from response
     // The response is a List with two entries:
     // [0] = transaction result with txID like acc://hash@account/path
@@ -397,6 +453,17 @@ class SmartSigner {
     );
 
     final response = await _client.submit(envelope.toJson());
+
+    // Surface a submit-time rejection immediately rather than polling to a
+    // bare timeout.
+    final submitError = _extractSubmitError(response);
+    if (submitError != null) {
+      return TransactionResult(
+        success: false,
+        txid: null,
+        error: 'Transaction rejected at submit: $submitError',
+      );
+    }
 
     // Extract txid from response
     String? txid;

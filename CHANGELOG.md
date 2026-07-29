@@ -5,6 +5,15 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-07-29
+
+### Fixed
+- **Submit-time rejections were silently swallowed** in both `signSubmitAndWait` paths — the response's `txID` was read while `status.failed` / `status.error` were ignored, so a rejected transaction became a bare timeout instead of an actionable error.
+- `example/v3` custom-token example labelled base units as "tokens" (`Issuing 100000 tokens` for 10.0000 MYTKN) and never demonstrated `Amount.token`. It now converts explicitly, so the example no longer teaches the pattern that made an agent mint 0.00001 tokens instead of 1000.
+
+### Added
+- `llms.txt` documents that custom-token precision is configured on the issuer and is not 1e8.
+
 ## [2.3.3] - 2026-07-28
 
 ### Fixed
