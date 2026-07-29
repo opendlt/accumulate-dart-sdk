@@ -1,6 +1,6 @@
 # opendlt-dart-v2v3-sdk — repository guide for agents
 
-The Dart SDK for the Accumulate blockchain. Published as `opendlt_accumulate` (v2.3.2).
+The Dart SDK for the Accumulate blockchain. Published as `opendlt_accumulate` (v2.3.3).
 
 > **The project root is `unified/`, not the repository root.** Run every command below from there unless stated otherwise.
 

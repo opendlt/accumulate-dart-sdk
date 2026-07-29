@@ -175,7 +175,12 @@ class AccumulateClient {
   /// queries an account or account chain by URL
   Future<dynamic> query(Map<String, dynamic> request) async {
     final result = await _client.call('query', request);
-    return dynamic.fromJson(result);
+    // The declared return type is `dynamic`, so there is no `.fromJson` to
+    // call — `dynamic` is a type keyword, not a class. The generator emitted
+    // `<ReturnType>.fromJson(result)` unconditionally. This is a genuine
+    // compile error; it stayed hidden because analysis_options.yaml excludes
+    // lib/src/generated/**, while pub.dev's analyzer (pana) does not.
+    return result;
   }
 
 

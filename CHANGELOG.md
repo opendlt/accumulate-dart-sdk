@@ -5,6 +5,15 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.3] - 2026-07-28
+
+### Fixed
+- **A real compile error in generated code**: `lib/src/generated/api/client.dart` emitted `return dynamic.fromJson(result);` — `dynamic` is a type keyword, not a class, so the generator's unconditional `<ReturnType>.fromJson(...)` was invalid Dart. It stayed hidden locally because `analysis_options.yaml` excludes `lib/src/generated/**`, while pub.dev's analyzer does not. This single error was also blocking platform detection.
+- `LICENSE` restored to the canonical Apache-2.0 text (with the copyright placeholder filled). The previous copy had identical wording but stripped indentation, which dropped it below the similarity threshold pub.dev uses — so no license was recognized.
+
+### Changed
+- pub.dev analysis score improves from **50/160 to 130/160**: file conventions 20→30, platform support 0→20, static analysis 0→30, dependencies 10→30.
+
 ## [2.3.2] - 2026-07-28
 
 ### Fixed
