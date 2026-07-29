@@ -1,0 +1,31 @@
+{
+  "name": "accumulate-dart-sdk",
+  // No official devcontainer feature for Dart, so use the upstream Dart image
+  // directly. pubspec requires sdk >=3.3.0 <4.0.0; `stable` satisfies that.
+  "image": "dart:stable",
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "username": "vscode",
+      "upgradePackages": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  // This directory IS the package root: pubspec.yaml sits here.
+  "postCreateCommand": "dart pub get",
+
+  "containerEnv": {
+    "ACCUMULATE_NETWORK": "kermit"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["dart-code.dart-code"]
+    }
+  },
+
+  "remoteUser": "vscode"
+}

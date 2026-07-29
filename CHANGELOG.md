@@ -5,6 +5,20 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.5] - 2026-07-29
+
+### Added
+- Canonical Accumulate error catalog in `llms-full.txt`: every error code with its
+  category, whether a retry is productive (`retryable`), likely causes, the concrete
+  fix, and the Dart type to catch. Each operation now lists the errors it can raise.
+- `.devcontainer/devcontainer.json` pinning this repo's toolchain, defaulting to the
+  Kermit testnet and carrying no credentials.
+
+### Fixed
+- `AGENTS.md` setup, test and layout paths now match this repository's actual root.
+  They previously instructed agents to `cd` into a subdirectory that does not exist
+  in a fresh clone, so the very first setup command failed.
+
 ## [2.3.4] - 2026-07-29
 
 ### Fixed

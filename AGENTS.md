@@ -2,8 +2,6 @@
 
 The Dart SDK for the Accumulate blockchain. Published as `opendlt_accumulate` (v2.3.4).
 
-> **The project root is `unified/`, not the repository root.** Run every command below from there unless stated otherwise.
-
 > Building **on** Accumulate rather than **on this SDK**? You want `llms.txt` (quickstart + rules) and `llms-full.txt` (full API). This file is about working on the SDK itself.
 
 ## Setup
@@ -11,7 +9,6 @@ The Dart SDK for the Accumulate blockchain. Published as `opendlt_accumulate` (v
 Toolchain: **Dart SDK >=3.3.0 <4.0.0**
 
 ```bash
-cd unified
 dart pub get
 ```
 
@@ -40,15 +37,15 @@ dart format --output=none --set-exit-if-changed .
 ## Layout
 
 ```
-unified/lib/            the package (this is the real project root)
-unified/test/           test suite
-unified/example/v3/     runnable examples
-unified/bin/            CLI entry point
+lib/            the package
+test/           test suite (test/integration needs the network)
+example/v3/     runnable examples
+bin/            CLI entry point
 ```
 
 ## Gotchas
 
-- The repo root is not the package root; `unified/` holds `pubspec.yaml`.
+- This repository root IS the package root: `pubspec.yaml` sits here. Do not look for a `unified/` subdirectory — that is an artifact of some local working copies and is not part of this repo.
 - pub.dev analysis currently reports `has:error` and scores 40/160. Run `dart analyze` and `dart doc` before publishing — analyzer errors degrade code intelligence for every consumer, human or agent.
 - Errors are typed via `AccError` / `JsonRpcErrorMapper`, wired into `Transport.call`/`batch`. Catch `on AccError`, not a bare exception.
 
