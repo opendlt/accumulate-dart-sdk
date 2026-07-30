@@ -5,6 +5,23 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.7] - 2026-07-30
+
+### Added
+- **`tx sign`** — the CLI can now sign. It is the ONLY verb that signs, requires an
+  explicit `--key-file`/`--key-env`, and delegates to the SDK's own signer so the
+  produced bytes match the library path exactly (they are consensus-visible).
+- `tx build` now emits a **real transaction body** via `TxBody` and rejects unknown
+  ops. It previously echoed `{op, params}` back, so a typo exited 0 and only
+  surfaced at submit — or never.
+- `--out` on `tx build`/`tx sign`, so build -> sign -> submit composes through files.
+- Op and parameter names accept either `snake_case` or `camelCase`.
+
+### Fixed
+- **`tx submit` no longer claims to sign.** It accepted `--key-file`/`--key-env`
+  and never used them, advertising a capability that did not exist. Those flags are
+  gone and it now declares `signs: false`; the envelope must already be signed.
+
 ## [2.3.6] - 2026-07-30
 
 ### Added

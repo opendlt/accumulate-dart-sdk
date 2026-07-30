@@ -17,7 +17,7 @@ import "package:opendlt_accumulate/opendlt_accumulate.dart";
 const envelopeVersion = "1";
 const sdkName = "dart";
 // Bump with pubspec.yaml on each release; Dart cannot read pubspec at runtime.
-const sdkVersion = "2.3.6";
+const sdkVersion = "2.3.7";
 
 const exitOk = 0;
 const exitFailed = 1;
