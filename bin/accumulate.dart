@@ -10,6 +10,7 @@
 
 import "dart:convert";
 import "dart:io";
+import "dart:typed_data";
 
 import "package:opendlt_accumulate/opendlt_accumulate.dart";
 
@@ -206,11 +207,18 @@ const verbs = <Verb>[
       [{"name": "--amount", "type": "number", "required": true}]),
   Verb("tx build", "Build an unsigned transaction body", false, false,
       [{"name": "op", "type": "string", "required": true}],
-      [{"name": "--param", "type": "key=value", "required": false, "repeatable": true}]),
-  Verb("tx submit", "Submit a signed envelope", true, true, [], [
-    {"name": "--envelope", "type": "path", "required": true},
+      [{"name": "--param", "type": "key=value", "required": false, "repeatable": true},
+       {"name": "--out", "type": "path", "required": false}]),
+  Verb("tx sign", "Sign a transaction body into a submittable envelope", true, true, [], [
+    {"name": "--body", "type": "path", "required": true},
+    {"name": "--principal", "type": "string", "required": true},
+    {"name": "--signer", "type": "string", "required": true},
     {"name": "--key-file", "type": "path", "required": false},
     {"name": "--key-env", "type": "string", "required": false},
+    {"name": "--out", "type": "path", "required": false},
+  ]),
+  Verb("tx submit", "Submit an ALREADY-SIGNED envelope (does not sign)", true, false, [], [
+    {"name": "--envelope", "type": "path", "required": true},
   ]),
   Verb("tx wait", "Poll a transaction until it reaches a final state", true, false,
       [{"name": "txid", "type": "string", "required": true}],
@@ -236,6 +244,17 @@ const globalFlags = [
 ];
 
 const groups = {"credits", "tx", "keys", "net"};
+
+List<int> _hexToBytes(String hex) {
+  final clean = hex.startsWith("0x") ? hex.substring(2) : hex;
+  if (clean.length % 2 != 0) {
+    throw UsageException("private key hex must have an even number of characters");
+  }
+  return [
+    for (var i = 0; i < clean.length; i += 2)
+      int.parse(clean.substring(i, i + 2), radix: 16)
+  ];
+}
 
 /// Owns stdout. Exactly one object is ever written to it.
 class Emitter {
@@ -295,6 +314,112 @@ class Emitter {
     }
     return ec;
   }
+}
+
+
+/// Case- and underscore-insensitive match, so snake_case and camelCase both work.
+/// Op names differ per SDK (send_tokens_single vs sendTokensSingle) and making an
+/// agent learn each one defeats having a single CLI spec.
+String? _pick(Map<String, String> p, String wanted) {
+  String norm(String x) => x.replaceAll("_", "").toLowerCase();
+  final target = norm(wanted);
+  for (final k in p.keys) {
+    if (norm(k) == target) return p[k];
+  }
+  return null;
+}
+
+String _req(Map<String, String> p, String name, String op) {
+  final v = _pick(p, name);
+  if (v == null) throw UsageException("'$op' requires --param $name");
+  return v;
+}
+
+/// Dart has no practical runtime reflection, so builder dispatch is explicit.
+/// Every branch delegates to `TxBody`, which is what keeps the produced bytes
+/// identical to the SDK path.
+const _ops = <String>[
+  "create_identity", "create_token_account", "create_data_account", "create_token",
+  "send_tokens_single", "issue_tokens_single", "burn_tokens", "add_credits",
+  "buy_credits", "write_data", "create_lite_token_account",
+];
+
+Map<String, dynamic> buildBody(String op, Map<String, String> p) {
+  String n(String x) => x.replaceAll("_", "").toLowerCase();
+  switch (n(op)) {
+    case "createidentity":
+      return TxBody.createIdentity(
+        url: _req(p, "url", op),
+        keyBookUrl: _pick(p, "key_book_url"),
+        publicKeyHash: _pick(p, "public_key_hash"),
+      );
+    case "createtokenaccount":
+      return TxBody.createTokenAccount(
+        url: _req(p, "url", op), tokenUrl: _req(p, "token_url", op));
+    case "createdataaccount":
+      return TxBody.createDataAccount(url: _req(p, "url", op));
+    case "createtoken":
+      return TxBody.createToken(
+        url: _req(p, "url", op),
+        symbol: _req(p, "symbol", op),
+        precision: int.parse(_req(p, "precision", op)));
+    case "sendtokenssingle":
+      return TxBody.sendTokensSingle(
+        toUrl: _req(p, "to_url", op), amount: _req(p, "amount", op));
+    case "issuetokenssingle":
+      return TxBody.issueTokensSingle(
+        toUrl: _req(p, "to_url", op), amount: _req(p, "amount", op));
+    case "burntokens":
+      return TxBody.burnTokens(amount: _req(p, "amount", op));
+    case "addcredits":
+      final oracle = _pick(p, "oracle");
+      return TxBody.addCredits(
+        recipient: _req(p, "recipient", op),
+        amount: _req(p, "amount", op),
+        oracle: oracle == null ? null : int.parse(oracle));
+    case "buycredits":
+      final oracle = _pick(p, "oracle");
+      return TxBody.buyCredits(
+        recipientUrl: _req(p, "recipient_url", op),
+        amount: _req(p, "amount", op),
+        oracle: oracle == null ? null : int.parse(oracle));
+    case "writedata":
+      // entriesHex is a LIST of hex strings; accept one --param data=<hex>.
+      return TxBody.writeData(entriesHex: [_req(p, "data", op)]);
+    case "createlitetokenaccount":
+      return TxBody.createLiteTokenAccount();
+    default:
+      throw UsageException(
+          "unknown transaction op '$op' — available: ${_ops.join(', ')}");
+  }
+}
+
+/// Resolve the signing key from an EXPLICIT source only.
+///
+/// Never falls back to an ambient default: a CLI that quietly finds a key is a
+/// CLI that signs something the caller did not intend. Keys are never positional
+/// either, so they stay out of shell history.
+Future<String> loadPrivateKey(Map<String, Object?> a) async {
+  final keyFile = a["key_file"] as String?;
+  final keyEnv = a["key_env"] as String?;
+  if (keyFile != null && keyEnv != null) {
+    throw UsageException("pass only one of --key-file or --key-env");
+  }
+  if (keyFile != null) {
+    final f = File(keyFile);
+    if (!await f.exists()) throw UsageException("could not read --key-file: $keyFile");
+    return (await f.readAsString()).trim();
+  }
+  if (keyEnv != null) {
+    final v = Platform.environment[keyEnv];
+    if (v == null || v.isEmpty) {
+      throw UsageException("--key-env '$keyEnv' is not set or empty");
+    }
+    return v.trim();
+  }
+  throw UsageException(
+      "signing requires an explicit key source: --key-file <path> or --key-env <VAR>. "
+      "No ambient default key is ever used.");
 }
 
 NetworkEndpoint resolveEndpoint(String network) {
@@ -440,11 +565,14 @@ Future<int> runVerb(String verb, Map<String, Object?> a, String network, Emitter
       if (idx < 0) throw UsageException("--param must be key=value, got '$raw'");
       params[raw.substring(0, idx)] = raw.substring(idx + 1);
     }
+    final body = buildBody(a["op"] as String, params);
+    final outPath = a["out"] as String?;
+    if (outPath != null) {
+      await File(outPath).writeAsString(jsonEncode(body));
+    }
     return em.ok({
-      "op": a["op"],
-      "params": params,
-      "signed": false,
-      "note": "unsigned body; sign and submit with `tx submit --envelope`",
+      "op": a["op"], "params": params, "body": body, "signed": false, "out": outPath,
+      "note": "unsigned body; sign it with `tx sign --body <file>`, then `tx submit`",
     });
   }
 
@@ -543,11 +671,37 @@ Future<int> runVerb(String verb, Map<String, Object?> a, String network, Emitter
           });
         }
 
-      case "tx submit":
-        if (a["key_file"] == null && a["key_env"] == null) {
-          throw UsageException("tx submit signs, so it requires --key-file or --key-env; "
-              "no ambient default key is ever used");
+      case "tx sign":
+        // The ONLY verb that signs. Delegates to the SDK signer: signing bytes
+        // are consensus-visible and a second implementation is how they drift.
+        final privateHex = await loadPrivateKey(a);
+        final bodyFile = File(a["body"] as String);
+        if (!await bodyFile.exists()) {
+          throw UsageException("no such body file: ${a["body"]}");
         }
+        final body = jsonDecode(await bodyFile.readAsString()) as Map<String, dynamic>;
+        final seed = Uint8List.fromList(_hexToBytes(privateHex));
+        final kp = await Ed25519KeyPair.fromSeed(seed);
+        final signer = SmartSigner(
+          client: acc.v3,
+          keypair: UnifiedKeyPair.fromEd25519(kp),
+          signerUrl: a["signer"] as String,
+        );
+        final envelope = await signer.sign(
+            principal: a["principal"] as String, body: body);
+        final signedJson = envelope.toJson();
+        final outPath = a["out"] as String?;
+        if (outPath != null) {
+          await File(outPath).writeAsString(jsonEncode(signedJson));
+        }
+        return em.ok({
+          "signed": true, "principal": a["principal"], "signer": a["signer"],
+          "envelope": signedJson, "out": outPath,
+        });
+
+      case "tx submit":
+        // Deliberately does NOT sign, and no longer pretends to: it used to take
+        // --key-file/--key-env and never use them.
         final f = File(a["envelope"] as String);
         if (!await f.exists()) {
           throw UsageException("no such envelope file: ${a["envelope"]}");
