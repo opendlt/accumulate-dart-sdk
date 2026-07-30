@@ -43,6 +43,22 @@ example/v3/     runnable examples
 bin/            CLI entry point
 ```
 
+## CLI
+
+This repo ships the `accumulate` CLI. Run it from the checkout with:
+
+```bash
+dart run bin/accumulate.dart --json version
+```
+
+It conforms to `docs/ai-agent-readiness/CLI-SPEC.md` in accumulate-studio: one JSON
+envelope on stdout, `ACC_*` error codes, exit codes 0/1/2/3. **Changing its output shape
+is a contract change** — re-run the shared conformance suite, which gates all five SDKs:
+
+```bash
+node tools/cli-conformance/run.mjs --cmd "dart run bin/accumulate.dart" --cwd . --sdk dart
+```
+
 ## Gotchas
 
 - This repository root IS the package root: `pubspec.yaml` sits here. Do not look for a `unified/` subdirectory — that is an artifact of some local working copies and is not part of this repo.

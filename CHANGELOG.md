@@ -5,6 +5,17 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.6] - 2026-07-30
+
+### Added
+- **Structured CLI** (`accumulate`): 13 verbs, `--json` emits exactly one envelope
+  object on stdout, canonical `ACC_*` error codes with a `retryable` flag, and exit
+  codes 0/1/2/3 an agent can branch on without parsing. `accumulate --help --json`
+  returns the whole command tree. Defaults to testnet; mainnet requires both
+  `--network mainnet` and `ACCUMULATE_ALLOW_MAINNET=1`.
+  Conforms to `CLI-SPEC.md`; verified by a shared conformance suite across all five SDKs.
+- `llms.txt` and `AGENTS.md` now document the CLI.
+
 ## [2.3.5] - 2026-07-29
 
 ### Added
