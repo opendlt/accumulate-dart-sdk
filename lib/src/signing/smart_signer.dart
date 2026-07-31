@@ -3,6 +3,7 @@ import "../v3/client_v3.dart";
 import "../protocol/envelope.dart";
 import "../build/context.dart";
 import "../build/builders.dart";
+import "../codec/transaction_codec.dart";
 import "../util/bytes.dart";
 import "algorithm.dart";
 import "unified_keypair.dart";
@@ -207,6 +208,77 @@ class SmartSigner {
   /// - vote: Optional vote for governance transactions
   /// - signatureMemo: Optional memo attached to the signature
   /// - signatureData: Optional metadata attached to the signature
+  Future<Envelope> signExisting(Envelope envelope) async {
+    // Co-sign an EXISTING envelope, appending this signer's signature.
+    //
+    // This is what a multi-signature (M-of-N) flow needs, and it is NOT the same
+    // as calling [sign] twice. `sign` derives the transaction's `initiator` from
+    // the FIRST signer's metadata and bakes it into the header, so the
+    // transaction hash is a function of that signer. Signing the same body again
+    // with a different key therefore produces a *different transaction*, and
+    // neither one ever reaches the threshold.
+    //
+    // A co-signer must instead sign a preimage over the EXISTING transaction
+    // hash, using its own signature metadata:
+    //
+    //     preimage = SHA256(cosignerSigMetadataHash + existingTxHash)
+    //
+    // The hash is read from the envelope's first signature rather than
+    // recomputed, so this is exact for every transaction type — including
+    // writeData/writeDataTo, whose body hash uses a different algorithm.
+    if (envelope.signatures.isEmpty) {
+      throw ArgumentError(
+          "envelope has no existing signature to co-sign; sign it first");
+    }
+    final txHashHex = envelope.signatures.first.transactionHash;
+    if (txHashHex.isEmpty) {
+      throw ArgumentError("existing signature has no transactionHash");
+    }
+    final txHash = fromHex(txHashHex);
+
+    final pub = await _keypair.publicKeyBytes();
+    final pubHex = toHex(pub);
+
+    // Refuse a duplicate: the same key signing twice does not advance the
+    // threshold, and the node rejects the envelope.
+    if (envelope.signatures.any((s) => s.publicKey == pubHex)) {
+      throw ArgumentError(
+          "this key has already signed the envelope; a threshold needs DISTINCT signers");
+    }
+
+    final signerVersion = await getSignerVersion();
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+
+    // The co-signer's OWN metadata — its signer URL, version and timestamp.
+    // Deliberately not the transaction's initiator.
+    final sigMetadataHash = TransactionCodec.computeSignatureMetadataHash(
+      publicKey: pub,
+      signer: _signerUrl,
+      signerVersion: signerVersion,
+      timestamp: timestamp,
+    );
+
+    final preimage =
+        TransactionCodec.createSigningPreimage(sigMetadataHash, txHash);
+    final signature = await _keypair.signRaw(preimage);
+
+    return Envelope(
+      transaction: envelope.transaction,
+      signatures: [
+        ...envelope.signatures,
+        SignatureDoc(
+          type: "ed25519",
+          publicKey: pubHex,
+          signature: toHex(signature),
+          timestamp: timestamp,
+          transactionHash: txHashHex,
+          signer: _signerUrl,
+          signerVersion: signerVersion,
+        ),
+      ],
+    );
+  }
+
   Future<Envelope> sign({
     required String principal,
     required Map<String, dynamic> body,

@@ -209,9 +209,11 @@ const verbs = <Verb>[
       [{"name": "op", "type": "string", "required": true}],
       [{"name": "--param", "type": "key=value", "required": false, "repeatable": true},
        {"name": "--out", "type": "path", "required": false}]),
-  Verb("tx sign", "Sign a transaction body into a submittable envelope", true, true, [], [
-    {"name": "--body", "type": "path", "required": true},
-    {"name": "--principal", "type": "string", "required": true},
+  Verb("tx sign", "Sign a body into an envelope, or co-sign an existing envelope (M-of-N)",
+      true, true, [], [
+    {"name": "--body", "type": "path", "required": false},
+    {"name": "--envelope", "type": "path", "required": false},
+    {"name": "--principal", "type": "string", "required": false},
     {"name": "--signer", "type": "string", "required": true},
     {"name": "--key-file", "type": "path", "required": false},
     {"name": "--key-env", "type": "string", "required": false},
@@ -675,11 +677,13 @@ Future<int> runVerb(String verb, Map<String, Object?> a, String network, Emitter
         // The ONLY verb that signs. Delegates to the SDK signer: signing bytes
         // are consensus-visible and a second implementation is how they drift.
         final privateHex = await loadPrivateKey(a);
-        final bodyFile = File(a["body"] as String);
-        if (!await bodyFile.exists()) {
-          throw UsageException("no such body file: ${a["body"]}");
+        final bodyPath = a["body"] as String?;
+        final envPath = a["envelope"] as String?;
+        if ((bodyPath == null) == (envPath == null)) {
+          throw UsageException(
+              "pass exactly one of --body (start a new transaction) or "
+              "--envelope (co-sign an existing one for an M-of-N threshold)");
         }
-        final body = jsonDecode(await bodyFile.readAsString()) as Map<String, dynamic>;
         final seed = Uint8List.fromList(_hexToBytes(privateHex));
         final kp = await Ed25519KeyPair.fromSeed(seed);
         final signer = SmartSigner(
@@ -687,15 +691,42 @@ Future<int> runVerb(String verb, Map<String, Object?> a, String network, Emitter
           keypair: UnifiedKeyPair.fromEd25519(kp),
           signerUrl: a["signer"] as String,
         );
-        final envelope = await signer.sign(
-            principal: a["principal"] as String, body: body);
+
+        Envelope envelope;
+        bool cosigned;
+        if (envPath != null) {
+          final envFile = File(envPath);
+          if (!await envFile.exists()) {
+            throw UsageException("no such envelope file: $envPath");
+          }
+          final existing = Envelope.fromJson(
+              jsonDecode(await envFile.readAsString()) as Map<String, dynamic>);
+          envelope = await signer.signExisting(existing);
+          cosigned = true;
+        } else {
+          final bodyFile = File(bodyPath!);
+          if (!await bodyFile.exists()) {
+            throw UsageException("no such body file: $bodyPath");
+          }
+          if (a["principal"] == null) {
+            throw UsageException("--principal is required when signing a --body");
+          }
+          final body =
+              jsonDecode(await bodyFile.readAsString()) as Map<String, dynamic>;
+          envelope = await signer.sign(
+              principal: a["principal"] as String, body: body);
+          cosigned = false;
+        }
+
         final signedJson = envelope.toJson();
         final outPath = a["out"] as String?;
         if (outPath != null) {
           await File(outPath).writeAsString(jsonEncode(signedJson));
         }
         return em.ok({
-          "signed": true, "principal": a["principal"], "signer": a["signer"],
+          "signed": true, "cosigned": cosigned,
+          "signatures": envelope.signatures.length,
+          "principal": a["principal"], "signer": a["signer"],
           "envelope": signedJson, "out": outPath,
         });
 
@@ -708,6 +739,26 @@ Future<int> runVerb(String verb, Map<String, Object?> a, String network, Emitter
         }
         final env = jsonDecode(await f.readAsString());
         final res = await acc.v3.submit(env);
+        // A response without an RPC error does NOT mean the transaction was
+        // accepted: V3 returns one status per message, and a rejected envelope
+        // shows up as `failed: true` inside them. Reporting that as success is
+        // the "submitted != delivered" trap that makes an agent believe a write
+        // landed when it never did.
+        final failures = <String>[];
+        if (res is List) {
+          for (final item in res) {
+            if (item is Map && item["status"] is Map) {
+              final st = item["status"] as Map;
+              if (st["failed"] == true) {
+                final err = st["error"];
+                failures.add((err is Map ? err["message"] : null)?.toString() ??
+                    st["code"]?.toString() ??
+                    "unknown");
+              }
+            }
+          }
+        }
+        if (failures.isNotEmpty) return em.fail(failures.join("; "));
         return em.ok({"submitted": true, "result": res});
 
       default:

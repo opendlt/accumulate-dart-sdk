@@ -80,6 +80,24 @@ class UnifiedKeyPair {
     return UnifiedKeyPair._(SignatureAlgorithm.ecdsaSha256, keypair);
   }
 
+  /// The raw public key bytes of the wrapped keypair.
+  ///
+  /// Needed by co-signing, which must identify this signer among the signatures
+  /// an envelope already carries.
+  Future<Uint8List> publicKeyBytes() async {
+    return await (_keypair as dynamic).publicKeyBytes() as Uint8List;
+  }
+
+  /// Sign an arbitrary message with the wrapped keypair.
+  ///
+  /// [sign] builds a whole envelope; this is the low-level primitive for when the
+  /// caller has already computed a signing preimage — as co-signing does, where
+  /// the preimage is over an EXISTING transaction hash rather than a freshly
+  /// built transaction.
+  Future<Uint8List> signRaw(Uint8List message) async {
+    return await (_keypair as dynamic).sign(message) as Uint8List;
+  }
+
   /// Get the public key hash for this key pair
   ///
   /// The format depends on the key type:

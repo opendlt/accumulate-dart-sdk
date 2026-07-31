@@ -109,6 +109,22 @@ class SignatureDoc {
         if (memo != null && memo!.isNotEmpty) "memo": memo,
         if (data != null && data!.isNotEmpty) "data": toHex(data!),
       };
+
+  /// Rebuild a signature document from its JSON form.
+  ///
+  /// The counterpart to [toJson]. Multi-party signing passes envelopes between
+  /// processes as files, so an envelope that can be serialised but not read back
+  /// cannot be co-signed at all.
+  factory SignatureDoc.fromJson(Map<String, dynamic> json) => SignatureDoc(
+        type: json["type"] as String? ?? "ed25519",
+        publicKey: json["publicKey"] as String,
+        signature: json["signature"] as String,
+        timestamp: (json["timestamp"] as num).toInt(),
+        transactionHash: json["transactionHash"] as String? ?? "",
+        signer: json["signer"] as String?,
+        signerVersion: (json["signerVersion"] as num?)?.toInt(),
+        memo: json["memo"] as String?,
+      );
 }
 
 /// Complete envelope structure for submission
@@ -127,4 +143,32 @@ class Envelope {
           "transaction": [transaction],
         },
       };
+
+  /// Rebuild an envelope from its JSON form.
+  ///
+  /// Accepts both the wrapped shape produced by [toJson] (`{"envelope": {...}}`,
+  /// which is what the V3 `submit` parameter expects) and a bare
+  /// `{"signatures": [...], "transaction": [...]}`, so an envelope written by any
+  /// of the SDK CLIs can be read back and co-signed.
+  factory Envelope.fromJson(Map<String, dynamic> json) {
+    final root = (json["envelope"] is Map)
+        ? (json["envelope"] as Map).cast<String, dynamic>()
+        : json;
+
+    final txs = root["transaction"];
+    final Map<String, dynamic> tx;
+    if (txs is List && txs.isNotEmpty) {
+      tx = (txs.first as Map).cast<String, dynamic>();
+    } else if (txs is Map) {
+      tx = txs.cast<String, dynamic>();
+    } else {
+      throw ArgumentError("envelope has no `transaction`");
+    }
+
+    final sigs = (root["signatures"] as List? ?? const [])
+        .map((s) => SignatureDoc.fromJson((s as Map).cast<String, dynamic>()))
+        .toList(growable: false);
+
+    return Envelope(signatures: sigs, transaction: tx);
+  }
 }
