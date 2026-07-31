@@ -5,6 +5,22 @@ All notable changes to the opendlt-accumulate Dart SDK will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.8] - 2026-07-31
+
+### Added
+- **M-of-N co-signing.** `SmartSigner.signExisting` appends a signature to an EXISTING
+  envelope, and the CLI exposes it as `accumulate tx sign --envelope <file>`.
+  This is what a signature threshold actually needs: signing the same body twice
+  derives a new `initiator` and produces a *different* transaction, so neither
+  copy ever reaches the threshold. Verified on Kermit: a 2-of-2 transaction
+  built, signed, co-signed and delivered entirely through the CLI.
+
+### Fixed
+- `tx submit` now inspects the **per-message status** in the response. A 200 with
+  no JSON-RPC error does not mean the transaction was accepted — a rejected
+  envelope reports `failed: true` inside the result, and reporting that as success
+  is the "submitted != delivered" trap that makes an agent believe a write landed.
+
 ## [2.3.7] - 2026-07-30
 
 ### Added
