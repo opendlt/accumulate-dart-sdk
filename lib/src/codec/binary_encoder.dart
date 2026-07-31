@@ -750,10 +750,11 @@ class TransactionBodyMarshaler {
       encoder.writeUrl(3, (body["tokenUrl"] ?? body["token"]) as String);
     }
 
+    // Field 7: Authorities (repeated URLs) -- protocol field number, not 4
     if (body["authorities"] != null) {
       final authorities = body["authorities"] as List;
       for (final auth in authorities) {
-        encoder.writeUrl(4, auth as String);
+        encoder.writeUrl(7, auth as String);
       }
     }
 
@@ -864,11 +865,11 @@ class TransactionBodyMarshaler {
       encoder.writeBigInt(7, supplyLimitValue);
     }
 
-    // Field 8: Authorities (repeated URLs)
+    // Field 9: Authorities (repeated URLs) -- protocol field number, not 8
     if (body["authorities"] != null) {
       final authorities = body["authorities"] as List;
       for (final auth in authorities) {
-        encoder.writeUrl(8, auth as String);
+        encoder.writeUrl(9, auth as String);
       }
     }
 
