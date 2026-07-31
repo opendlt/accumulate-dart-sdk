@@ -239,11 +239,17 @@ class SmartSigner {
     final pub = await _keypair.publicKeyBytes();
     final pubHex = toHex(pub);
 
-    // Refuse a duplicate: the same key signing twice does not advance the
-    // threshold, and the node rejects the envelope.
-    if (envelope.signatures.any((s) => s.publicKey == pubHex)) {
+    // Refuse a duplicate: the same key signing twice as the SAME signer does not
+    // advance that page's threshold, and the node rejects the envelope. The
+    // signer URL is part of the identity: one key may legitimately sign as two
+    // different pages when a transaction needs several authorities to approve —
+    // creating an account governed by another book, for instance.
+    String trimSlash(String? u) =>
+        (u != null && u.endsWith('/')) ? u.substring(0, u.length - 1) : (u ?? '');
+    if (envelope.signatures.any(
+        (s) => s.publicKey == pubHex && trimSlash(s.signer) == trimSlash(_signerUrl))) {
       throw ArgumentError(
-          "this key has already signed the envelope; a threshold needs DISTINCT signers");
+          "this key has already signed the envelope as $_signerUrl; a threshold needs DISTINCT signers");
     }
 
     final signerVersion = await getSignerVersion();
