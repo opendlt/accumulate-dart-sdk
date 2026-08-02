@@ -13,7 +13,8 @@ Connect, build a transaction body with `TxBody`, then sign + submit + wait with 
 ```
 final client = Accumulate.network(NetworkEndpoint.testnet);   // or QuickStart.testnet()
 // body = TxBody.<operation>(...)
-final r = await SmartSigner(signer).signSubmitAndWait(principal, body);
+final signer = SmartSigner(client: client.v3, keypair: keypair, signerUrl: signerUrl);
+final r = await signer.signSubmitAndWait(principal: principal, body: body);
 ```
 
 ## Rules
