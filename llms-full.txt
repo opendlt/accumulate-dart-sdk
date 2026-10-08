@@ -154,6 +154,15 @@ The node could not determine which partition should handle the request.
 - Dart type: `ApiError`
 - fix: Build the envelope through TxBody + SmartSigner rather than by hand. Every transaction needs a header with a valid `principal` — that URL is the routing key, and without it the node rejects the request before validating anything else.
 
+## Hash-locked transfers (HTLC, Accumulate 1.4.6.x) — library API only
+- Lock: `signer.signSubmitAndWait(principal: p, body: TxBody.sendTokensSingle(toUrl: to, amount: a), hashLock: HashLockOptions(hashAlgorithm: HashAlgorithm.SHA256, hash: sha256(secret), expiration: ...))`.
+  The recipient gets a `SyntheticLockedDeposit` (type 0x37) instead of a normal deposit.
+- Release: the recipient submits `TxBody.releaseLockedOperation(lockedTxId: id, preimage: secret)` (type 0x18) before expiry; otherwise the tokens are refunded to the sender.
+- Node limits: hash is 32 bytes (SHA256, SHA256D) or 20 bytes (HASH160); expiration 10 minutes to 30 days ahead. `HashLockOptions.validateForSubmit()` checks these locally.
+- `hashLock` is TransactionHeader field 8, so it is part of the transaction hash. `expire`, `holdUntil`, `authorities` (fields 5-7) are too; `signExisting` co-signs by reusing the hash in the envelope, so those fields always survive a hand-off.
+- Not exposed by the `accumulate` CLI yet.
+- v3 proof methods: `majorHeaderRange`, `minorRootRange`, `anchorReceipt`; `Receipt.fromJson` models `forHeight`, `complete`, `partition`, `startsAtMainState`; `NetworkGlobals.blockInterval` (raw `{seconds, nanoseconds}`).
+
 ## Operations (25)
 
 ### generate_keys  —  Generate Keys  [utility]

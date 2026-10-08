@@ -532,8 +532,11 @@ final class NetworkGlobals {
   final bool anchorEmptyBlocks;
   final dynamic feeSchedule;
   final dynamic limits;
+  /// Cadence the network produces blocks at (Accumulate 1.4.6.7). Optional: absent in older
+  /// network state. Kept as the raw JSON value (Go emits a duration as {seconds, nanoseconds}).
+  final dynamic blockInterval;
 
-  const NetworkGlobals({required this.operatorAcceptThreshold, required this.validatorAcceptThreshold, required this.majorBlockSchedule, required this.anchorEmptyBlocks, required this.feeSchedule, required this.limits});
+  const NetworkGlobals({required this.operatorAcceptThreshold, required this.validatorAcceptThreshold, required this.majorBlockSchedule, required this.anchorEmptyBlocks, required this.feeSchedule, required this.limits, this.blockInterval});
 
   /// Create from JSON map
   factory NetworkGlobals.fromJson(Map<String, dynamic> json) {
@@ -544,6 +547,7 @@ final class NetworkGlobals {
     anchorEmptyBlocks: json['AnchorEmptyBlocks'] as bool,
     feeSchedule: json['FeeSchedule'] as dynamic,
     limits: json['Limits'] as dynamic,
+    blockInterval: json['BlockInterval'] ?? json['blockInterval'],
     );
   }
 
@@ -555,6 +559,7 @@ final class NetworkGlobals {
     'AnchorEmptyBlocks': anchorEmptyBlocks,
     'FeeSchedule': feeSchedule,
     'Limits': limits,
+    if (blockInterval != null) 'BlockInterval': blockInterval,
     }; 
     return CanonicalJson.sortMap(map);
   }

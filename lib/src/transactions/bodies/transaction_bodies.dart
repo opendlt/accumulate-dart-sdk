@@ -22,6 +22,8 @@ import 'updatekeypage.dart';
 import 'lockaccount.dart';
 import 'updateaccountauth.dart';
 import 'updatekey.dart';
+import 'releaselockedoperation.dart';
+import 'syntheticlockeddeposit.dart';
 import 'networkmaintenance.dart';
 import 'activateprotocolversion.dart';
 import 'remotetransaction.dart';
@@ -67,6 +69,8 @@ class TransactionBodyDispatcher {
       case 'lockaccount': return LockAccount.fromJson(json);
       case 'updateaccountauth': return UpdateAccountAuth.fromJson(json);
       case 'updatekey': return UpdateKey.fromJson(json);
+      case 'releaselockedoperation': return ReleaseLockedOperation.fromJson(json);
+      case 'syntheticlockeddeposit': return SyntheticLockedDeposit.fromJson(json);
       case 'networkmaintenance': return NetworkMaintenance.fromJson(json);
       case 'activateprotocolversion': return ActivateProtocolVersion.fromJson(json);
       case 'remotetransaction': return RemoteTransaction.fromJson(json);

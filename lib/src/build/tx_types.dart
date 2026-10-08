@@ -24,6 +24,7 @@ class TxTypes {
   static const transferCredits = "transferCredits";
   static const updateAccountAuth = "updateAccountAuth";
   static const updateKey = "updateKey";
+  static const releaseLockedOperation = "releaseLockedOperation";
   static const networkMaintenance = "networkMaintenance";
   static const activateProtocolVersion = "activateProtocolVersion";
   static const remoteTransaction = "remote";
@@ -35,6 +36,7 @@ class TxTypes {
   static const syntheticDepositCredits = "syntheticDepositCredits";
   static const syntheticBurnTokens = "syntheticBurnTokens";
   static const syntheticForwardTransaction = "syntheticForwardTransaction";
+  static const syntheticLockedDeposit = "syntheticLockedDeposit";
 
   // System transactions (system-generated, not user-initiated)
   static const systemGenesis = "systemGenesis";

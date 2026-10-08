@@ -1,6 +1,9 @@
 // GENERATED — Do not edit.
 // Protocol types from synthetic_transactions.yml
 
+import 'dart:typed_data';
+
+import '../../enums.dart' show HashAlgorithm;
 import '../runtime/canon_helpers.dart';
 import '../runtime/validators.dart';
 
@@ -132,6 +135,72 @@ final class SyntheticDepositTokens {
     Validators.validateRequired(amount, 'amount');
     Validators.validateBigInt(amount, 'amount');
     Validators.validateRequired(isIssuer, 'isIssuer');
+  }
+}
+
+
+/// Protocol type: SyntheticLockedDeposit (type 0x37, Accumulate 1.4.6.7)
+/// Embeds SyntheticOrigin (cause, initiator, feeRefund, index). JSON uses hex for hash (as Go does).
+final class SyntheticLockedDeposit {
+  final String cause;
+  final String initiator;
+  final int feeRefund;
+  final int index;
+  final String token;
+  final BigInt amount;
+  final String sender;
+  final HashAlgorithm hashAlgorithm;
+  final Uint8List hash;
+  final String? expiration;
+  final bool isIssuer;
+
+  const SyntheticLockedDeposit({required this.cause, required this.initiator, this.feeRefund = 0, this.index = 0, required this.token, required this.amount, required this.sender, required this.hashAlgorithm, required this.hash, this.expiration, this.isIssuer = false});
+
+  /// Create from JSON map
+  factory SyntheticLockedDeposit.fromJson(Map<String, dynamic> json) {
+    final h = json['Hash'] ?? json['hash'];
+    return SyntheticLockedDeposit(
+    cause: (json['Cause'] ?? json['cause']) as String,
+    initiator: (json['Initiator'] ?? json['initiator']) as String,
+    feeRefund: ((json['FeeRefund'] ?? json['feeRefund']) as num?)?.toInt() ?? 0,
+    index: ((json['Index'] ?? json['index']) as num?)?.toInt() ?? 0,
+    token: (json['Token'] ?? json['token']) as String,
+    amount: BigInt.parse((json['Amount'] ?? json['amount']).toString()),
+    sender: (json['Sender'] ?? json['sender']) as String,
+    hashAlgorithm: HashAlgorithm.fromJson((json['HashAlgorithm'] ?? json['hashAlgorithm']) as Object),
+    hash: h is Uint8List ? h : Uint8List.fromList(List<int>.generate((h as String).length ~/ 2, (i) => int.parse(h.substring(i * 2, i * 2 + 2), radix: 16))),
+    expiration: (json['Expiration'] ?? json['expiration']) as String?,
+    isIssuer: ((json['IsIssuer'] ?? json['isIssuer']) as bool?) ?? false,
+    );
+  }
+
+  /// Convert to canonical JSON map with sorted keys
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{    'Cause': cause,
+    'Initiator': initiator,
+    if (feeRefund != 0) 'FeeRefund': feeRefund,
+    if (index != 0) 'Index': index,
+    'Token': token,
+    'Amount': CanonHelpers.bigIntToJson(amount),
+    'Sender': sender,
+    'HashAlgorithm': hashAlgorithm.toJson(),
+    'Hash': hash.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    if (expiration != null) 'Expiration': expiration,
+    if (isIssuer) 'IsIssuer': isIssuer,
+    };
+    return CanonicalJson.sortMap(map);
+  }
+
+  /// Validate the object
+  void validate() {
+    Validators.validateRequired(cause, 'cause');
+    Validators.validateRequired(token, 'token');
+    Validators.validateUrl(token, 'token');
+    Validators.validateRequired(amount, 'amount');
+    Validators.validateBigInt(amount, 'amount');
+    Validators.validateRequired(sender, 'sender');
+    Validators.validateUrl(sender, 'sender');
+    Validators.validateRequired(hash, 'hash');
   }
 }
 

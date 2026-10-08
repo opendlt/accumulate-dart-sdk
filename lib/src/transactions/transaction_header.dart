@@ -14,6 +14,7 @@ import '../build/context.dart';
 /// - Expire: Optional expiration options
 /// - HoldUntil: Optional hold until options
 /// - Authorities: Optional list of additional authority URLs
+/// - HashLock: Optional hash lock (field 8, Accumulate 1.4.6.7)
 class TransactionHeader {
   /// The account URL initiating the transaction
   final String Principal;
@@ -38,6 +39,9 @@ class TransactionHeader {
   /// Fixed: Changed from String? to List<String>? to match Go core
   final List<String>? Authorities;
 
+  /// Optional hash lock (field 8)
+  final HashLockOptions? HashLock;
+
   const TransactionHeader({
     required this.Principal,
     required this.Initiator,
@@ -46,6 +50,7 @@ class TransactionHeader {
     this.Expire,
     this.HoldUntil,
     this.Authorities,
+    this.HashLock,
   });
 
   Map<String, dynamic> toJson() => {
@@ -57,6 +62,7 @@ class TransactionHeader {
         if (HoldUntil != null) 'HoldUntil': HoldUntil!.toJson(),
         if (Authorities != null && Authorities!.isNotEmpty)
           'Authorities': Authorities,
+        if (HashLock != null) 'HashLock': HashLock!.toJson(),
       };
 
   static TransactionHeader fromJson(Map<String, dynamic> j) {
@@ -78,6 +84,10 @@ class TransactionHeader {
           : null,
       Authorities: j['Authorities'] != null
           ? (j['Authorities'] as List).cast<String>()
+          : null,
+      HashLock: j['HashLock'] != null
+          ? HashLockOptions.fromJson(
+              (j['HashLock'] as Map).cast<String, dynamic>())
           : null,
     );
   }
