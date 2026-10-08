@@ -6,11 +6,15 @@ final class TransactionHeader {
     required this.principal,
     required this.initiator,
     this.memo,
+    this.hashLock,
   });
 
   final String principal;
   final Uint8List initiator;
   final String? memo;
+
+  /// Optional hash lock (field 8): {hashAlgorithm, hash (hex), expiration}
+  final Map<String, dynamic>? hashLock;
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{
@@ -18,6 +22,7 @@ final class TransactionHeader {
       'Initiator': ByteUtils.bytesToJson(initiator),
     };
     if (memo != null) json['Memo'] = memo;
+    if (hashLock != null) json['HashLock'] = hashLock;
     return json;
   }
 
@@ -27,6 +32,7 @@ final class TransactionHeader {
         principal: json['Principal'] as String,
         initiator: ByteUtils.bytesFromJson(json['Initiator'] as String),
         memo: json['Memo'] as String?,
+        hashLock: (json['HashLock'] as Map?)?.cast<String, dynamic>(),
       );
     } catch (e) {
       return null;

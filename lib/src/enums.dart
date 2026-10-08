@@ -9,7 +9,8 @@ enum ExecutorVersion {
   V2Baikonur('6'),
   V2Vandenberg('7'),
   V2Jiuquan('8'),
-  VNext('9')
+  V2Kourou('9'),
+  VNext('10')
 ;
 
   const ExecutorVersion(this.value);
@@ -37,6 +38,8 @@ enum ExecutorVersion {
       case '8':
         return ExecutorVersion.V2Jiuquan;
       case '9':
+        return ExecutorVersion.V2Kourou;
+      case '10':
         return ExecutorVersion.VNext;
       default:
         throw ArgumentError('ExecutorVersion: unknown value $v');
@@ -340,6 +343,7 @@ enum TransactionType {
   TransferCredits('0x12'),
   UpdateAccountAuth('0x15'),
   UpdateKey('0x16'),
+  ReleaseLockedOperation('0x18'),
   NetworkMaintenance('0x2E'),
   ActivateProtocolVersion('0x2F'),
   Remote('0x30'),
@@ -349,6 +353,7 @@ enum TransactionType {
   SyntheticDepositCredits('0x34'),
   SyntheticBurnTokens('0x35'),
   SyntheticForwardTransaction('0x36'),
+  SyntheticLockedDeposit('0x37'),
   SystemGenesis('0x60'),
   DirectoryAnchor('0x61'),
   BlockValidatorAnchor('0x62'),
@@ -405,6 +410,8 @@ enum TransactionType {
         return TransactionType.UpdateAccountAuth;
       case '0x16':
         return TransactionType.UpdateKey;
+      case '0x18':
+        return TransactionType.ReleaseLockedOperation;
       case '0x2E':
         return TransactionType.NetworkMaintenance;
       case '0x2F':
@@ -423,6 +430,8 @@ enum TransactionType {
         return TransactionType.SyntheticBurnTokens;
       case '0x36':
         return TransactionType.SyntheticForwardTransaction;
+      case '0x37':
+        return TransactionType.SyntheticLockedDeposit;
       case '0x60':
         return TransactionType.SystemGenesis;
       case '0x61':
@@ -573,6 +582,54 @@ enum BookType {
         return BookType.Operator;
       default:
         throw ArgumentError('BookType: unknown value $v');
+    }
+  }
+}
+
+/// Hash algorithm used by hash locks (Go: protocol HashAlgorithm).
+///
+/// Numeric values are the binary wire values; JSON uses the names
+/// `sha256`, `sha256D`, `hash160` (Go's enum string forms).
+enum HashAlgorithm {
+  Unknown(0, 'unknown'),
+  SHA256(1, 'sha256'),
+  SHA256D(2, 'sha256D'),
+  HASH160(3, 'hash160')
+;
+
+  const HashAlgorithm(this.code, this.value);
+
+  /// Binary wire value.
+  final int code;
+
+  /// JSON string form.
+  final String value;
+
+  String toJson() => value;
+
+  static HashAlgorithm fromJson(Object v) {
+    if (v is int) {
+      for (final a in HashAlgorithm.values) {
+        if (a.code == v) return a;
+      }
+      throw ArgumentError('HashAlgorithm: unknown value $v');
+    }
+    final s = v.toString();
+    switch (s.toLowerCase()) {
+      case 'unknown':
+      case '0':
+        return HashAlgorithm.Unknown;
+      case 'sha256':
+      case '1':
+        return HashAlgorithm.SHA256;
+      case 'sha256d':
+      case '2':
+        return HashAlgorithm.SHA256D;
+      case 'hash160':
+      case '3':
+        return HashAlgorithm.HASH160;
+      default:
+        throw ArgumentError('HashAlgorithm: unknown value $v');
     }
   }
 }

@@ -2,6 +2,8 @@ import "../core/options.dart";
 import "../core/endpoints.dart";
 import "../core/transport.dart";
 
+export "receipt.dart";
+
 // ============================================================
 // V3 API OPTIONS CLASSES
 // ============================================================
@@ -241,6 +243,97 @@ class RangeOptions {
       };
 }
 
+/// Options for including a receipt in query results.
+///
+/// Matches Go: pkg/api/v3/types_gen.go ReceiptOptions. Pass `toJson()` as the
+/// `includeReceipt` entry of a query request.
+class ReceiptOptions {
+  /// Include a receipt for any anchor
+  final bool? forAny;
+
+  /// Include a receipt produced against this minor block height
+  final int? forHeight;
+
+  const ReceiptOptions({this.forAny, this.forHeight});
+
+  Map<String, dynamic> toJson() => {
+        if (forAny == true) "forAny": true,
+        if (forHeight != null && forHeight != 0) "forHeight": forHeight,
+      };
+}
+
+/// Options for `major-header-range`: a record per major block in
+/// [start, end]. Only the directory partition serves this.
+///
+/// Matches Go: pkg/api/v3/types_gen.go MajorHeaderRangeOptions
+class MajorHeaderRangeOptions {
+  /// The partition to serve; only the directory serves this
+  final String partition;
+
+  /// The first major block index
+  final int start;
+
+  /// The last major block index, inclusive
+  final int end;
+
+  const MajorHeaderRangeOptions(
+      {required this.partition, required this.start, required this.end});
+
+  Map<String, dynamic> toJson() =>
+      {"partition": partition, "start": start, "end": end};
+}
+
+/// Options for `minor-root-range`: binds minor blocks past the spine to it.
+/// Only the directory partition serves this.
+///
+/// Matches Go: pkg/api/v3/types_gen.go MinorRootRangeOptions
+class MinorRootRangeOptions {
+  /// The partition to serve; only the directory serves this
+  final String partition;
+
+  /// The client's last verified minor block
+  final int since;
+
+  /// The target minor block, or 0 for as far as possible
+  final int until;
+
+  const MinorRootRangeOptions(
+      {required this.partition, required this.since, this.until = 0});
+
+  Map<String, dynamic> toJson() =>
+      {"partition": partition, "since": since, "until": until};
+}
+
+/// Options for `anchor-receipt`: bind a partition's BPT root to a directory
+/// root. This is the second call of a two-call account proof.
+///
+/// Matches Go: pkg/api/v3/types_gen.go AnchorReceiptOptions
+class AnchorReceiptOptions {
+  /// The partition whose BPT root is being bound (the first call's
+  /// `Receipt.partition`)
+  final String partition;
+
+  /// Where the first call's receipt terminates, as 64 hex characters
+  final String bptRoot;
+
+  /// Ask for a receipt terminating at a directory root no older than this
+  /// block. 0 returns the oldest receipt that works.
+  final int atOrAfter;
+
+  AnchorReceiptOptions(
+      {required this.partition, required this.bptRoot, this.atOrAfter = 0}) {
+    if (!RegExp(r"^[0-9a-fA-F]{64}$").hasMatch(bptRoot)) {
+      throw ArgumentError.value(bptRoot, "bptRoot", "must be 32 bytes of hex");
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        "partition": partition,
+        "bptRoot": bptRoot.toLowerCase(),
+        if (atOrAfter != 0) "atOrAfter": atOrAfter,
+      };
+}
+
 // ============================================================
 // V3 CLIENT
 // ============================================================
@@ -398,6 +491,32 @@ class AccumulateV3 {
   /// Matches Go: SnapshotService.ListSnapshots()
   Future<dynamic> listSnapshots(ListSnapshotsOptions options) {
     return _tx.call("list-snapshots", options.toJson());
+  }
+
+  // ============================================================
+  // PROOF SERVICE (spine / anchor proofs)
+  // ============================================================
+  // Matches Go: pkg/api/v3/api.go ProofService interface
+
+  /// A record per major block in [start, end] (directory only).
+  ///
+  /// Matches Go: ProofService.MajorHeaderRange()
+  Future<dynamic> majorHeaderRange(MajorHeaderRangeOptions options) {
+    return _tx.call("major-header-range", options.toJson());
+  }
+
+  /// Bind minor blocks past the spine to it (directory only).
+  ///
+  /// Matches Go: ProofService.MinorRootRange()
+  Future<dynamic> minorRootRange(MinorRootRangeOptions options) {
+    return _tx.call("minor-root-range", options.toJson());
+  }
+
+  /// Bind a partition's BPT root to a directory root.
+  ///
+  /// Matches Go: ProofService.AnchorReceipt()
+  Future<dynamic> anchorReceipt(AnchorReceiptOptions options) {
+    return _tx.call("anchor-receipt", options.toJson());
   }
 
   // ============================================================

@@ -615,6 +615,39 @@ final class UpdateAccountAuth {
 }
 
 
+/// Protocol type: ReleaseLockedOperation (type 0x18, Accumulate 1.4.6.7)
+/// JSON uses hex for preimage (as Go does).
+final class ReleaseLockedOperation {
+  final String lockedTxID;
+  final Uint8List preimage;
+
+  const ReleaseLockedOperation({required this.lockedTxID, required this.preimage});
+
+  /// Create from JSON map
+  factory ReleaseLockedOperation.fromJson(Map<String, dynamic> json) {
+    final p = json['Preimage'] ?? json['preimage'];
+    return ReleaseLockedOperation(
+    lockedTxID: (json['LockedTxID'] ?? json['lockedTxID']) as String,
+    preimage: p is Uint8List ? p : Uint8List.fromList(List<int>.generate((p as String).length ~/ 2, (i) => int.parse(p.substring(i * 2, i * 2 + 2), radix: 16))),
+    );
+  }
+
+  /// Convert to canonical JSON map with sorted keys
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{    'LockedTxID': lockedTxID,
+    'Preimage': preimage.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    };
+    return CanonicalJson.sortMap(map);
+  }
+
+  /// Validate the object
+  void validate() {
+    Validators.validateRequired(lockedTxID, 'lockedTxID');
+    Validators.validateRequired(preimage, 'preimage');
+  }
+}
+
+
 /// Protocol type: UpdateKey
 final class UpdateKey {
   final Uint8List newKeyHash;

@@ -15,7 +15,8 @@ void main() {
         expect(ExecutorVersion.V2Baikonur.toJson(), equals('6'));
         expect(ExecutorVersion.V2Vandenberg.toJson(), equals('7'));
         expect(ExecutorVersion.V2Jiuquan.toJson(), equals('8'));
-        expect(ExecutorVersion.VNext.toJson(), equals('9'));
+        expect(ExecutorVersion.V2Kourou.toJson(), equals('9'));
+        expect(ExecutorVersion.VNext.toJson(), equals('10'));
       });
 
       test('should deserialize from correct values', () {
@@ -27,7 +28,8 @@ void main() {
         expect(ExecutorVersion.fromJson('6'), equals(ExecutorVersion.V2Baikonur));
         expect(ExecutorVersion.fromJson('7'), equals(ExecutorVersion.V2Vandenberg));
         expect(ExecutorVersion.fromJson('8'), equals(ExecutorVersion.V2Jiuquan));
-        expect(ExecutorVersion.fromJson('9'), equals(ExecutorVersion.VNext));
+        expect(ExecutorVersion.fromJson('9'), equals(ExecutorVersion.V2Kourou));
+        expect(ExecutorVersion.fromJson('10'), equals(ExecutorVersion.VNext));
       });
 
       test('should round-trip correctly', () {
@@ -41,7 +43,7 @@ void main() {
       test('should throw on invalid values', () {
         expect(() => ExecutorVersion.fromJson('invalid'), throwsArgumentError);
         expect(() => ExecutorVersion.fromJson('0'), throwsArgumentError);
-        expect(() => ExecutorVersion.fromJson('10'), throwsArgumentError);
+        expect(() => ExecutorVersion.fromJson('99'), throwsArgumentError);
       });
     });
 

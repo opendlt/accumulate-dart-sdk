@@ -20,6 +20,8 @@ import 'bodies/burncredits.dart';
 import 'bodies/transfercredits.dart';
 import 'bodies/updateaccountauth.dart';
 import 'bodies/updatekey.dart';
+import 'bodies/releaselockedoperation.dart';
+import 'bodies/syntheticlockeddeposit.dart';
 import 'bodies/networkmaintenance.dart';
 import 'bodies/activateprotocolversion.dart';
 import 'bodies/remotetransaction.dart';
@@ -68,6 +70,8 @@ abstract class TransactionBody {
       case 'transfercredits': return TransferCredits.fromJson(j);
       case 'updateaccountauth': return UpdateAccountAuth.fromJson(j);
       case 'updatekey': return UpdateKey.fromJson(j);
+      case 'releaselockedoperation': return ReleaseLockedOperation.fromJson(j);
+      case 'syntheticlockeddeposit': return SyntheticLockedDeposit.fromJson(j);
       case 'networkmaintenance': return NetworkMaintenance.fromJson(j);
       case 'activateprotocolversion': return ActivateProtocolVersion.fromJson(j);
       case 'remotetransaction': return RemoteTransaction.fromJson(j);

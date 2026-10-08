@@ -293,6 +293,7 @@ class SmartSigner {
     DateTime? expire,
     int? holdUntil,
     List<String>? authorities,
+    HashLockOptions? hashLock,
     VoteType? vote,
     String? signatureMemo,
     Uint8List? signatureData,
@@ -307,6 +308,7 @@ class SmartSigner {
       expire: expire != null ? ExpireOptions(atTime: expire) : null,
       holdUntil: holdUntil != null ? HoldUntilOptions(minorBlock: holdUntil) : null,
       authorities: authorities,
+      hashLock: hashLock,
     );
 
     return _keypair.sign(
@@ -357,6 +359,7 @@ class SmartSigner {
     DateTime? expire,
     int? holdUntil,
     List<String>? authorities,
+    HashLockOptions? hashLock,
     VoteType? vote,
     String? signatureMemo,
     Uint8List? signatureData,
@@ -369,6 +372,7 @@ class SmartSigner {
       expire: expire,
       holdUntil: holdUntil,
       authorities: authorities,
+      hashLock: hashLock,
       vote: vote,
       signatureMemo: signatureMemo,
       signatureData: signatureData,
@@ -390,6 +394,7 @@ class SmartSigner {
     DateTime? expire,
     int? holdUntil,
     List<String>? authorities,
+    HashLockOptions? hashLock,
     VoteType? vote,
     String? signatureMemo,
     Uint8List? signatureData,
@@ -404,6 +409,7 @@ class SmartSigner {
       expire: expire,
       holdUntil: holdUntil,
       authorities: authorities,
+      hashLock: hashLock,
       vote: vote,
       signatureMemo: signatureMemo,
       signatureData: signatureData,

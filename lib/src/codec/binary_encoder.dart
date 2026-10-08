@@ -1,5 +1,6 @@
 import "dart:convert";
 import "dart:typed_data";
+import "../enums.dart" show HashAlgorithm;
 
 /// Binary encoder that matches Go's encoding/binary format for Accumulate protocol
 ///
@@ -136,6 +137,12 @@ class BinaryEncoder {
     _writeRaw(marshaled);
   }
 
+  /// Write a time field (Go WriteTime): field + zigzag varint of UTC unix seconds
+  void writeTime(int field, DateTime time) {
+    _writeField(field);
+    _writeVarintRaw(time.toUtc().millisecondsSinceEpoch ~/ 1000);
+  }
+
   /// Write a boolean field
   void writeBool(int field, bool value) {
     if (!value) return; // Don't write false
@@ -263,6 +270,15 @@ class TransactionHeaderMarshaler {
       }
     }
 
+    // Field 8: HashLock (nested HashLockOptions) - Accumulate 1.4.6.7
+    if (header["hashLock"] != null) {
+      final hashLock = header["hashLock"];
+      if (hashLock is Map) {
+        encoder.writeValue(
+            8, HashLockOptionsMarshaler.marshal(hashLock.cast<String, dynamic>()));
+      }
+    }
+
     return encoder.toBytes();
   }
 
@@ -273,6 +289,41 @@ class TransactionHeaderMarshaler {
       bytes[i] = int.parse(cleaned.substring(i * 2, i * 2 + 2), radix: 16);
     }
     return bytes;
+  }
+}
+
+/// Binary marshaler for HashLockOptions (TransactionHeader field 8).
+///
+/// Matches Go: protocol/types_gen.go HashLockOptions.MarshalBinary
+/// - Field 1: HashAlgorithm (enum; JSON name `sha256`/`sha256D`/`hash160` or int)
+/// - Field 2: Hash (bytes; hex string or Uint8List)
+/// - Field 3: Expiration (time; ISO-8601 string or DateTime, optional)
+class HashLockOptionsMarshaler {
+  static Uint8List marshal(Map<String, dynamic> hashLock) {
+    final encoder = BinaryEncoder();
+    final alg = hashLock["hashAlgorithm"];
+    if (alg != null) {
+      encoder.writeEnum(1, HashAlgorithm.fromJson(alg as Object).code);
+    }
+    encoder.writeBytes(2, _toBytes(hashLock["hash"]));
+    final exp = hashLock["expiration"];
+    if (exp != null) {
+      encoder.writeTime(3, _toTime(exp));
+    }
+    return encoder.toBytes();
+  }
+
+  static Uint8List? _toBytes(dynamic v) {
+    if (v == null) return null;
+    if (v is Uint8List) return v;
+    if (v is List<int>) return Uint8List.fromList(v);
+    return TransactionHeaderMarshaler._hexToBytes(v as String);
+  }
+
+  static DateTime _toTime(dynamic v) {
+    if (v is DateTime) return v;
+    if (v is String) return DateTime.parse(v);
+    throw ArgumentError("expiration must be String or DateTime");
   }
 }
 
@@ -504,6 +555,8 @@ class TransactionBodyMarshaler {
   static const txTypeTransferCredits = 0x12;
   static const txTypeUpdateAccountAuth = 0x15;
   static const txTypeUpdateKey = 0x16;
+  static const txTypeReleaseLockedOperation = 0x18;
+  static const txTypeSyntheticLockedDeposit = 0x37;
 
   /// Get numeric transaction type from string
   static int getTypeValue(String type) {
@@ -548,6 +601,10 @@ class TransactionBodyMarshaler {
         return txTypeUpdateAccountAuth;
       case "updatekey":
         return txTypeUpdateKey;
+      case "releaselockedoperation":
+        return txTypeReleaseLockedOperation;
+      case "syntheticlockeddeposit":
+        return txTypeSyntheticLockedDeposit;
       default:
         throw ArgumentError("Unknown transaction type: $type");
     }
@@ -595,6 +652,10 @@ class TransactionBodyMarshaler {
         return _marshalUpdateAccountAuth(body, typeValue);
       case txTypeTransferCredits:
         return _marshalTransferCredits(body, typeValue);
+      case txTypeReleaseLockedOperation:
+        return _marshalReleaseLockedOperation(body, typeValue);
+      case txTypeSyntheticLockedDeposit:
+        return _marshalSyntheticLockedDeposit(body, typeValue);
       default:
         throw ArgumentError(
             "Transaction type not yet supported for binary encoding: $type");
@@ -1384,6 +1445,65 @@ class TransactionBodyMarshaler {
 
     return encoder.toBytes();
   }
+
+  /// Marshal ReleaseLockedOperation (0x18)
+  /// Matches Go: protocol/types_gen.go ReleaseLockedOperation.MarshalBinary
+  /// Field 1: Type (enum)
+  /// Field 2: LockedTxID (txid, written as its string form)
+  /// Field 3: Preimage (bytes; hex string or Uint8List)
+  static Uint8List _marshalReleaseLockedOperation(
+      Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+    final txid = body["lockedTxID"] ?? body["lockedTxId"];
+    if (txid != null) {
+      encoder.writeString(2, txid as String);
+    }
+    encoder.writeBytes(3, HashLockOptionsMarshaler._toBytes(body["preimage"]));
+    return encoder.toBytes();
+  }
+
+  /// Marshal SyntheticLockedDeposit (0x37)
+  /// Matches Go: protocol/types_gen.go SyntheticLockedDeposit.MarshalBinary
+  /// Field 1: Type, 2: SyntheticOrigin (nested), 3: Token (url), 4: Amount (bigint),
+  /// 5: Sender (url), 6: HashAlgorithm (enum), 7: Hash (bytes),
+  /// 8: Expiration (time), 9: IsIssuer (bool)
+  /// SyntheticOrigin: 1 Cause (txid), 3 Initiator (url), 4 FeeRefund (uint), 5 Index (uint)
+  static Uint8List _marshalSyntheticLockedDeposit(
+      Map<String, dynamic> body, int typeValue) {
+    final encoder = BinaryEncoder();
+    encoder.writeEnum(1, typeValue);
+
+    final origin = BinaryEncoder();
+    final cause = body["cause"];
+    if (cause != null) origin.writeString(1, cause as String);
+    final initiator = body["initiator"];
+    if (initiator != null) origin.writeUrl(3, initiator as String);
+    final feeRefund = body["feeRefund"];
+    if (feeRefund != null) origin.writeUint(4, _toInt(feeRefund));
+    final index = body["index"];
+    if (index != null) origin.writeUint(5, _toInt(index));
+    encoder.writeValue(2, origin.toBytes());
+
+    if (body["token"] != null) encoder.writeUrl(3, body["token"] as String);
+    final amount = body["amount"];
+    if (amount != null) {
+      encoder.writeBigInt(
+          4, amount is BigInt ? amount : BigInt.parse(amount.toString()));
+    }
+    if (body["sender"] != null) encoder.writeUrl(5, body["sender"] as String);
+    final alg = body["hashAlgorithm"];
+    if (alg != null) {
+      encoder.writeEnum(6, HashAlgorithm.fromJson(alg as Object).code);
+    }
+    encoder.writeBytes(7, HashLockOptionsMarshaler._toBytes(body["hash"]));
+    final exp = body["expiration"];
+    if (exp != null) encoder.writeTime(8, HashLockOptionsMarshaler._toTime(exp));
+    if (body["isIssuer"] == true) encoder.writeBool(9, true);
+    return encoder.toBytes();
+  }
+
+  static int _toInt(dynamic v) => v is int ? v : int.parse(v.toString());
 
   /// Marshal CreditRecipient
   /// Field 1: Url (URL)

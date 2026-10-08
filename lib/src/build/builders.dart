@@ -440,6 +440,39 @@ class TxBody {
         "height": height,
       };
 
+  /// Release locked operation transaction body (type 0x18, Accumulate 1.4.6.7)
+  ///
+  /// Releases a hash-locked transaction by revealing the preimage of its
+  /// header HashLock. [lockedTxId] is the locked transaction's ID
+  /// (acc://<hash>@<account>); [preimage] is raw bytes or a hex string.
+  /// Matches Go: protocol/user_transactions.yml ReleaseLockedOperation
+  static Map<String, dynamic> releaseLockedOperation({
+    required String lockedTxId,
+    required Object preimage,
+  }) {
+    if (!lockedTxId.startsWith('acc://')) {
+      throw ArgumentError.value(lockedTxId, 'lockedTxId', 'must be an acc:// txid');
+    }
+    final Uint8List bytes;
+    if (preimage is Uint8List) {
+      bytes = preimage;
+    } else if (preimage is String) {
+      bytes = hexTo(preimage);
+    } else {
+      throw ArgumentError('preimage must be Uint8List or hex String');
+    }
+    if (bytes.isEmpty) {
+      throw ArgumentError.value(preimage, 'preimage', 'must not be empty');
+    }
+    return {
+      "type": TxTypes.releaseLockedOperation,
+      "lockedTxID": lockedTxId,
+      // Hex, like every other bytes field in a body map, so the envelope is JSON-safe
+      // (jsonEncode would turn a Uint8List into an array of ints, which Go rejects).
+      "preimage": toHex(bytes),
+    };
+  }
+
   // ============================================================
   // SPECIAL TRANSACTIONS
   // ============================================================

@@ -110,8 +110,10 @@ final class TransactionHeader {
   final dynamic expire;
   final dynamic holdUntil;
   final String authorities;
+  /// Optional hash lock (field 8, Accumulate 1.4.6.7): {hashAlgorithm, hash, expiration}
+  final dynamic hashLock;
 
-  const TransactionHeader({required this.principal, required this.initiator, required this.memo, required this.metadata, required this.expire, required this.holdUntil, required this.authorities});
+  const TransactionHeader({required this.principal, required this.initiator, required this.memo, required this.metadata, required this.expire, required this.holdUntil, required this.authorities, this.hashLock});
 
   /// Create from JSON map
   factory TransactionHeader.fromJson(Map<String, dynamic> json) {
@@ -123,6 +125,7 @@ final class TransactionHeader {
     expire: json['Expire'] as dynamic,
     holdUntil: json['HoldUntil'] as dynamic,
     authorities: json['Authorities'] as String,
+    hashLock: json['HashLock'] as dynamic,
     );
   }
 
@@ -135,6 +138,7 @@ final class TransactionHeader {
     'Expire': expire,
     'HoldUntil': holdUntil,
     'Authorities': authorities,
+    if (hashLock != null) 'HashLock': hashLock,
     }; 
     return CanonicalJson.sortMap(map);
   }

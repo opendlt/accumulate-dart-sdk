@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.5.0] - 2026-10-08
+
+### Added
+- **Accumulate 1.4.6.x protocol support.**
+  - `ExecutorVersion.V2Kourou = 9` (`v2-kourou`; runs on Kermit, destined for mainnet); `VNext`
+    moves from 9 to 10 to match the protocol. Previously a node reporting Kourou decoded as
+    `VNext` (numeric) or threw (name).
+  - **Hash-locked transfers (HTLC).** `TransactionHeader` field 8 (`HashLockOptions`, `HashAlgorithm`,
+    `validateForSubmit()`), transaction types `ReleaseLockedOperation` (0x18) and
+    `SyntheticLockedDeposit` (0x37), `TxBody.releaseLockedOperation`, and a `hashLock:` argument on
+    `SmartSigner.sign` / `signAndSubmit` / `signSubmitAndWait`.
+  - v3: `Receipt` model (`forHeight`, `complete`, `partition`, `startsAtMainState`), `ReceiptOptions`, and
+    `majorHeaderRange` / `minorRootRange` / `anchorReceipt` with their options types.
+  - `NetworkGlobals.blockInterval`, kept as the raw JSON value (the node emits `{seconds, nanoseconds}`).
+- `test/conformance/codec/golden_vectors_1_4_6_7_test.dart` checks header, HashLock, body and
+  transaction-hash bytes against vectors produced by Go's own marshaler (accumulate e1d1db9, 1.4.6.7);
+  `test/unit/htlc` covers the API surface and a JSON hand-off of a fully-optioned envelope.
+
 All notable changes to the opendlt-accumulate Dart SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
