@@ -1,6 +1,6 @@
 # opendlt-dart-v2v3-sdk — repository guide for agents
 
-The Dart SDK for the Accumulate blockchain. Published as `opendlt_accumulate` (v2.3.4).
+The Dart SDK for the Accumulate blockchain. Published as `opendlt_accumulate` (v2.5.0).
 
 > Building **on** Accumulate rather than **on this SDK**? You want `llms.txt` (quickstart + rules) and `llms-full.txt` (full API). This file is about working on the SDK itself.
 
@@ -24,6 +24,7 @@ dart pub get   # no separate build step
 |---|---|:--:|
 | `dart test` | full suite | no |
 | `dart test test/integration` | integration | **yes** |
+| `dart test test/unit/htlc test/conformance/codec/golden_vectors_1_4_6_7_test.dart` | hash-lock (HTLC) golden vectors and API | no |
 
 Network-dependent suites talk to a live testnet. If they fail while the unit suite passes, suspect the network before suspecting your change.
 
@@ -64,6 +65,7 @@ node tools/cli-conformance/run.mjs --cmd "dart run bin/accumulate.dart" --cwd . 
 - This repository root IS the package root: `pubspec.yaml` sits here. Do not look for a `unified/` subdirectory — that is an artifact of some local working copies and is not part of this repo.
 - pub.dev analysis currently reports `has:error` and scores 40/160. Run `dart analyze` and `dart doc` before publishing — analyzer errors degrade code intelligence for every consumer, human or agent.
 - Errors are typed via `AccError` / `JsonRpcErrorMapper`, wired into `Transport.call`/`batch`. Catch `on AccError`, not a bare exception.
+- Hash locks (HTLC) are library-only. `hashLock` is TransactionHeader field 8 and part of the transaction hash; `dart test test/unit/htlc test/conformance/codec/golden_vectors_1_4_6_7_test.dart` pins those bytes. A failing vector means the signing bytes changed — a consensus-visible break, not a test to update. Refund on expiry is not currently functional on the network, so no test or doc may claim it works.
 
 ## Permitted commands
 
